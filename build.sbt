@@ -15,5 +15,13 @@ libraryDependencies ++= Seq(
   "com.iheart" %% "ficus" % "1.4.7",
   "org.typelevel" %% "cats-core" % "2.1.1",
   "uk.gov.hmrc" %% "emailaddress" % "3.4.0",
-  "org.scalatest" %% "scalatest" % "3.1.1" % Test
+  "com.typesafe.slick" %% "slick" % "3.3.2",
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.3.2",
+  "org.postgresql" % "postgresql" % "42.2.12",
+  "com.h2database" % "h2" % "1.4.200",
+  "joda-time" % "joda-time" % "2.10.6",
+  "org.scalatest" %% "scalatest" % "3.1.1",
+  "com.typesafe.akka" %% "akka-stream-testkit" % "2.6.5",
+  "com.typesafe.akka" %% "akka-http-testkit" % "10.1.11",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 )
