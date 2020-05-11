@@ -5,7 +5,18 @@ import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
 
-case class Config(httpAddress: String, httpPort: Int)
+case class Config(
+                   httpAddress: String,
+                   httpPort: Int,
+                   nicknameMinLength: Int,
+                   nicknameMaxLength: Int,
+                   emailMinLength: Int,
+                   emailMaxLength: Int,
+                   subjectMinLength: Int,
+                   subjectMaxLength: Int,
+                   contentMinLength: Int,
+                   contentMaxLength: Int
+                 )
 
 
 object Config {

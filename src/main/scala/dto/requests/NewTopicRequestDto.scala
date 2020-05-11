@@ -8,6 +8,7 @@ import validation.{Validatable, ValidationFailure}
 import utils.Utils.booleanCheckWrapper
 import uk.gov.hmrc.emailaddress._
 import utils.Utils.isStringAValidTimestamp
+import config.Config.appConfig
 
 
 case class NewTopicRequestDto(nickname: String, email: String, subject: String, content: String, timestamp: String) extends Validatable[NewTopicRequestDto] {
@@ -20,10 +21,12 @@ case class NewTopicRequestDto(nickname: String, email: String, subject: String, 
     validateTimestamp
   ).mapN(NewTopicRequestDto.apply)
 
-  private def validateNickname: ValidationResult[String] = booleanCheckWrapper(nickname.length > 0 && nickname.length < 50, nickname, InvalidNicknameLength)
+  private def validateNickname: ValidationResult[String] =
+    booleanCheckWrapper(nickname.length >= appConfig.nicknameMinLength && nickname.length <= appConfig.nicknameMaxLength, nickname, InvalidNicknameLength)
+
   private def validateEmail: ValidationResult[String] = {
 
-    val lengthValidationResult = booleanCheckWrapper(email.length > 0 && email.length < 50, email, InvalidEmailLength)
+    val lengthValidationResult = booleanCheckWrapper(email.length >= appConfig.emailMinLength && email.length <= appConfig.emailMaxLength, email, InvalidEmailLength)
     if (lengthValidationResult.isInvalid) {
       lengthValidationResult
     } else if (!EmailAddress.isValid(email)) {
@@ -31,8 +34,12 @@ case class NewTopicRequestDto(nickname: String, email: String, subject: String, 
     } else email.validNel
   }
 
-  private def validateSubject: ValidationResult[String] = booleanCheckWrapper(subject.length > 0 && subject.length < 50, subject, InvalidSubjectLength)
-  private def validateContent: ValidationResult[String] = booleanCheckWrapper(content.length > 0 && content.length < 1000, content, InvalidContentLength)
+  private def validateSubject: ValidationResult[String] =
+    booleanCheckWrapper(subject.length >= appConfig.subjectMinLength && subject.length <= appConfig.subjectMaxLength, subject, InvalidSubjectLength)
+
+  private def validateContent: ValidationResult[String] =
+    booleanCheckWrapper(content.length >= appConfig.contentMinLength && content.length <= appConfig.contentMaxLength, content, InvalidContentLength)
+
   private def validateTimestamp: ValidationResult[String] = booleanCheckWrapper(isStringAValidTimestamp(timestamp), timestamp, InvalidTimestamp)
 }
 
