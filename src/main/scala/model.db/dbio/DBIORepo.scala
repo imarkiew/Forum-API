@@ -17,11 +17,11 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
   protected def findUserDbio(externalUser: UserDto): DBIO[Option[UserDto]] =
     users.filter(user => user.nickname === externalUser.nickname && user.email === externalUser.email).result.headOption
 
-  protected def findUserDbio(id: Int): DBIO[Option[UserDto]] = users.filter(_.userId === id).result.headOption
+  protected def findUserDbio(id: Long): DBIO[Option[UserDto]] = users.filter(_.userId === id).result.headOption
 
-  protected def addUserDbio(newUser: UserDto): DBIO[Int] = (for {
+  protected def addUserDbio(newUser: UserDto): DBIO[Long] = (for {
     isUserPresentInDatabase: Option[UserDto] <- findUserDbio(newUser)
-    userId: Int <- {
+    userId: Long <- {
       isUserPresentInDatabase match {
         case Some(user) => DBIO.successful(user.userId.get)
         case None => users.map(user => (user.nickname, user.email)) returning users.map(_.userId) += (newUser.nickname, newUser.email)
@@ -30,15 +30,15 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
   } yield userId).transactionally
 
 
-  protected def findPostDbio(id: Int): DBIO[Option[PostDto]] = posts.filter(_.postId === id).result.headOption
-  protected def addPostDbio(newPost: PostDto): DBIO[Int] =
+  protected def findPostDbio(id: Long): DBIO[Option[PostDto]] = posts.filter(_.postId === id).result.headOption
+  protected def addPostDbio(newPost: PostDto): DBIO[Long] =
     posts.map(post => (post.content, post.secretKey, post.postTimestamp, post.userId, post.topicId)) returning posts.map(_.postId) +=
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
-  protected def addTopicDbio(newTopic: TopicDto): DBIO[Int] = topics.map(topic => (topic.subject, topic.lastPostTimestamp)) returning topics.map(_.topicId) +=
+  protected def addTopicDbio(newTopic: TopicDto): DBIO[Long] = topics.map(topic => (topic.subject, topic.lastPostTimestamp)) returning topics.map(_.topicId) +=
     (newTopic.subject, newTopic.lastPostTimestamp)
 
-  protected def findTopicDbio(id: Int): DBIO[Option[TopicDto]] = topics.filter(_.topicId === id).result.headOption
+  protected def findTopicDbio(id: Long): DBIO[Option[TopicDto]] = topics.filter(_.topicId === id).result.headOption
 
   protected def addNewTopicRequestDbio(newTopicRequest: NewTopicRequestDto): DBIO[AddNewTopicRequestIds] = {
     val externalUser = UserDto(newTopicRequest.nickname, newTopicRequest.email)

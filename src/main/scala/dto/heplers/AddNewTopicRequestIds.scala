@@ -1,3 +1,3 @@
 package dto.heplers
 
-case class AddNewTopicRequestIds(userId: Int, topicId: Int, postId: Int)
+case class AddNewTopicRequestIds(userId: Long, topicId: Long, postId: Long)

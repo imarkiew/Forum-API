@@ -12,7 +12,7 @@ trait TopicsEntity { self: SlickConfig =>
   protected val topics = TableQuery[TopicsTable]
 
   protected class TopicsTable(tag: Tag) extends Table[TopicDto](tag, "topics") {
-    def topicId = column[Int]("topic_id", O.PrimaryKey, O.AutoInc)
+    def topicId = column[Long]("topic_id", O.PrimaryKey, O.AutoInc)
     def subject = column[String]("subject")
     def lastPostTimestamp = column[Timestamp]("last_post_timestamp")
 

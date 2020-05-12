@@ -11,7 +11,7 @@ trait UsersEntity { self: SlickConfig =>
   protected val users = TableQuery[UsersTable]
 
   protected class UsersTable(tag: Tag) extends Table[UserDto](tag, "users") {
-    def userId = column[Int]("user_id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Long]("user_id", O.PrimaryKey, O.AutoInc)
     def nickname = column[String]("nickname")
     def email = column[String]("email")
 
