@@ -35,7 +35,7 @@ class RequestsTest extends AnyWordSpec
       |   2. add new topic to the database
       |   3. add new post to the database
       |   4. return OK status
-      |   5. return ids for user, topic and post in json format
+      |   5. return ids for user, topic and post in the json format
     """.stripMargin in {
 
       val nickname = "Paweł"
@@ -79,16 +79,14 @@ class RequestsTest extends AnyWordSpec
         }
       }
     }
-  }
 
-  "The Forum-API" should {
     """
       |for a valid POST request to the addNewTopic path:
       |   1. do not add user if it already exists in database (only return its id)
       |   2. add new topic to the database
       |   3. add new post to the database
       |   4. return OK status
-      |   5. return ids for user, topic and post in json format
+      |   5. return ids for user, topic and post in the json format
     """.stripMargin in {
 
       val nickname = "nick_2"
@@ -133,9 +131,7 @@ class RequestsTest extends AnyWordSpec
         }
       }
     }
-  }
 
-  "The Forum-API" should {
     """
       |for a invalid POST request to the addNewTopic path
       |   1. send back to the client, a list of validation errors
@@ -156,7 +152,7 @@ class RequestsTest extends AnyWordSpec
     }
   }
 
-  "The Forum-API for a request to the pagination path" should {
+  "The Forum-API" should {
 
     val paginationRequestString = (topicId: String, postId: String, nrOfPostsBefore: String, nrOfPostsAfter: String) => s"/pagination?topicId=$topicId&postId=$postId&nrOfPostsBefore=$nrOfPostsBefore&nrOfPostsAfter=$nrOfPostsAfter"
     val post1 = PostDto("content_7", "secret_key_7", stringToTimestamp("2020-05-14T16:23:45.456Z"), 1, 1, Some(7))
@@ -168,8 +164,8 @@ class RequestsTest extends AnyWordSpec
     val post7 = PostDto("content_5", "secret_key_5", stringToTimestamp("2018-10-08T14:28:54.374Z"), 2, 1, Some(5))
 
     """
-      |for a valid GET request
-      |   1. return sorted by timestamp sequence of posts around specified post in a json format
+      |for a valid GET request to the pagination path
+      |   1. return sorted by timestamp sequence of posts around specified post in the json format
     """.stripMargin in {
 
       Get(paginationRequestString("1", "1", "4", "2")) ~> routes ~> check {
