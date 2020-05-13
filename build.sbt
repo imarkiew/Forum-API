@@ -19,7 +19,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick-hikaricp" % "3.3.2",
   "org.postgresql" % "postgresql" % "42.2.12",
   "com.h2database" % "h2" % "1.4.200",
-  "joda-time" % "joda-time" % "2.10.6",
   "org.scalatest" %% "scalatest" % "3.1.1",
   "com.typesafe.akka" %% "akka-stream-testkit" % "2.6.5",
   "com.typesafe.akka" %% "akka-http-testkit" % "10.1.11",
