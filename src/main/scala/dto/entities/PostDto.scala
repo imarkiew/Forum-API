@@ -1,6 +1,6 @@
 package dto.entities
 
-import java.sql.Timestamp
+import java.time.Instant
 
 
-case class PostDto(content: String, secretKey: String, postTimestamp: Timestamp, userId: Long, topicId: Long, postId: Option[Long] = None)
+case class PostDto(content: String, secretKey: String, postTimestamp: Instant, userId: Long, topicId: Long, postId: Option[Long] = None)
