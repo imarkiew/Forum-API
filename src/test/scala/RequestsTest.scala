@@ -155,4 +155,28 @@ class RequestsTest extends AnyWordSpec
       }
     }
   }
+
+  "The Forum-API for a request to the pagination path" should {
+
+    val paginationRequestString = (topicId: String, postId: String, nrOfPostsBefore: String, nrOfPostsAfter: String) => s"/pagination?topicId=$topicId&postId=$postId&nrOfPostsBefore=$nrOfPostsBefore&nrOfPostsAfter=$nrOfPostsAfter"
+    val post1 = PostDto("content_7", "secret_key_7", stringToTimestamp("2020-05-14T16:23:45.456Z"), 1, 1, Some(7))
+    val post2 = PostDto("content_4", "secret_key_4", stringToTimestamp("2020-05-09T22:00:00.103Z"), 1, 1, Some(4))
+    val post3 = PostDto("content_1", "secret_key_1", stringToTimestamp("2020-04-22T19:10:25.474Z"), 1, 1, Some(1))
+    val post4 = PostDto("content_6", "secret_key_6", stringToTimestamp("2020-03-27T08:15:52.004Z"), 2, 1, Some(6))
+    val post5 = PostDto("content_2", "secret_key_2", stringToTimestamp("2020-03-22T11:03:33.532Z"), 2, 1, Some(2))
+    val post6 = PostDto("content_8", "secret_key_8", stringToTimestamp("2019-02-06T17:02:29.000Z"), 2, 1, Some(8))
+    val post7 = PostDto("content_5", "secret_key_5", stringToTimestamp("2018-10-08T14:28:54.374Z"), 2, 1, Some(5))
+
+    """
+      |for a valid GET request
+      |   1. return sorted by timestamp sequence of posts around specified post in a json format
+    """.stripMargin in {
+
+      Get(paginationRequestString("1", "1", "4", "2")) ~> routes ~> check {
+        status shouldBe OK
+        contentType shouldBe `application/json`
+        responseAs[Seq[PostDto]] shouldBe Seq(post1, post2, post3, post4, post5, post6, post7)
+      }
+    }
+  }
 }

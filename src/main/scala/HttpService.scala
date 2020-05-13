@@ -26,5 +26,13 @@ trait HttpService extends JsonConverter {
         case Invalid(validationFailures @ NonEmptyList(_, _)) => complete(StatusCodes.BadRequest, validationFailures.toList)
       }
     }
+  } ~
+  path("pagination") {
+    (get & parameter('topicId.as[Long], 'postId.as[Long], 'nrOfPostsBefore.as[Long], 'nrOfPostsAfter.as[Long])) { (topicId, postId, nrOfPostsBefore, nrOfPostsAfter) =>
+      onComplete(dbApi.postPagination(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)){
+        case Success(posts) => complete(posts)
+        case Failure(_) => complete(StatusCodes.InternalServerError)
+      }
+    }
   }
 }

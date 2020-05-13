@@ -17,6 +17,7 @@ trait DBAPI extends DBIORepo { self: SlickConfig =>
   def findUser(externalUser: UserDto): Future[Option[UserDto]] = findUserDbio(externalUser)
   def findUser(id: Long): Future[Option[UserDto]] = findUserDbio(id)
   def findPost(id: Long): Future[Option[PostDto]] = findPostDbio(id)
+  def postPagination(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): Future[Seq[PostDto]] = postsPaginationDbio(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)
   def findTopic(id: Long): Future[Option[TopicDto]] = findTopicDbio(id)
   def addNewTopicRequest(newTopicRequest: NewTopicRequestDto): Future[AddNewTopicRequestIds] = addNewTopicRequestDbio(newTopicRequest)
 }

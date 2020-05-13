@@ -35,6 +35,15 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     posts.map(post => (post.content, post.secretKey, post.postTimestamp, post.userId, post.topicId)) returning posts.map(_.postId) +=
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
+  protected def postsPaginationDbio(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Seq[PostDto]] = {
+    (for {
+      middlePostTimestamp <- posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.head
+      requiredTopic = posts.filter(x => x.topicId === topicId)
+      posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfter + 1).unionAll( // unionAll preserves the order
+        requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBefore)).result
+    } yield posts).transactionally
+  }
+
   protected def addTopicDbio(newTopic: TopicDto): DBIO[Long] = topics.map(topic => (topic.subject, topic.lastPostTimestamp)) returning topics.map(_.topicId) +=
     (newTopic.subject, newTopic.lastPostTimestamp)
 
