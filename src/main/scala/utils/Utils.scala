@@ -15,7 +15,5 @@ object Utils {
 
   def generateSecretKey: String = UUID.randomUUID().toString.replace("-", "")
 
-  def isStringAValidTimestamp(string: String): Boolean = Try[Instant](Instant.parse(string)).isSuccess
-
-  def stringToTimestamp(string: String): Instant = Instant.parse(string)
+  def stringToTimestamp(string: String): Try[Instant] = Try[Instant](Instant.parse(string))
 }

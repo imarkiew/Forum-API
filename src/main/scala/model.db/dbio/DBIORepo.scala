@@ -51,7 +51,7 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
 
   protected def addNewTopicRequestDbio(newTopicRequest: NewTopicRequestDto): DBIO[AddNewTopicRequestIds] = {
     val externalUser = UserDto(newTopicRequest.nickname, newTopicRequest.email)
-    val newTopic = TopicDto(newTopicRequest.subject, stringToTimestamp(newTopicRequest.timestamp))
+    val newTopic = TopicDto(newTopicRequest.subject, stringToTimestamp(newTopicRequest.timestamp).get)
     val userDbio = findUserDbio(externalUser)
     val topicIdDbio = addTopicDbio(newTopic)
 
@@ -66,7 +66,7 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
       }
       topicId <- topicIdDbio
       postId <- {
-        val newPost = PostDto(newTopicRequest.content, generateSecretKey, stringToTimestamp(newTopicRequest.timestamp), userId, topicId)
+        val newPost = PostDto(newTopicRequest.content, generateSecretKey, stringToTimestamp(newTopicRequest.timestamp).get, userId, topicId)
         addPostDbio(newPost)
       }
     } yield AddNewTopicRequestIds(userId, topicId, postId)).transactionally

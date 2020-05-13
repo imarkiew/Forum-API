@@ -7,7 +7,7 @@ import validation.ValidationTypes.ValidationResult
 import validation.{Validatable, ValidationFailure}
 import utils.Utils.booleanCheckWrapper
 import uk.gov.hmrc.emailaddress._
-import utils.Utils.isStringAValidTimestamp
+import utils.Utils.stringToTimestamp
 import config.Config.appConfig
 
 
@@ -40,7 +40,7 @@ case class NewTopicRequestDto(nickname: String, email: String, subject: String, 
   private def validateContent: ValidationResult[String] =
     booleanCheckWrapper(content.length >= appConfig.contentMinLength && content.length <= appConfig.contentMaxLength, content, InvalidContentLength)
 
-  private def validateTimestamp: ValidationResult[String] = booleanCheckWrapper(isStringAValidTimestamp(timestamp), timestamp, InvalidTimestamp)
+  private def validateTimestamp: ValidationResult[String] = booleanCheckWrapper(stringToTimestamp(timestamp).isSuccess, timestamp, InvalidTimestamp)
 }
 
 
