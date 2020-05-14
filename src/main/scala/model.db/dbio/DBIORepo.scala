@@ -7,6 +7,7 @@ import dto.requests.NewTopicRequestDto
 import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
 import scala.concurrent.ExecutionContext
+import config.Config
 
 
 trait DBIORepo extends PostsEntity { self: SlickConfig =>
@@ -36,11 +37,21 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
   protected def postsPaginationDbio(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Seq[PostDto]] = {
+    val maxNrOfRequiredPosts = nrOfPostsBefore + nrOfPostsAfter + 1
+    val maxNrOfReturnedPosts = Config.appConfig.maxNrOfReturnedPosts
+
+    val (nrOfPostsBeforeChecked, nrOfPostsAfterChecked) = if(maxNrOfRequiredPosts <= maxNrOfReturnedPosts){
+      (nrOfPostsBefore, nrOfPostsAfter)
+    } else {
+      val factor = (nrOfPostsBefore + nrOfPostsAfter).toDouble / (maxNrOfReturnedPosts - 1).toDouble
+      ((nrOfPostsBefore.toDouble / factor).floor.toLong, (nrOfPostsAfter.toDouble / factor).floor.toLong)
+    }
+
     (for {
-      middlePostTimestamp <- posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.head
+      middlePostTimestamp <- posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.headOption
       requiredTopic = posts.filter(x => x.topicId === topicId)
-      posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfter + 1).unionAll( // unionAll preserves the order
-        requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBefore)).result
+      posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfterChecked + 1).unionAll( // unionAll preserves the order
+        requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBeforeChecked)).result
     } yield posts).transactionally
   }
 

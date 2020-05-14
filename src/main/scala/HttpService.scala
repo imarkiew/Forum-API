@@ -6,6 +6,7 @@ import cats.data.Validated.{Invalid, Valid}
 import dto.requests.NewTopicRequestDto
 import json.converter.JsonConverter
 import model.db.impl.DBAPI
+import validation.failures.NegativeParametersFailure
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
@@ -29,9 +30,13 @@ trait HttpService extends JsonConverter {
   } ~
   path("pagination") {
     (get & parameter('topicId.as[Long], 'postId.as[Long], 'nrOfPostsBefore.as[Long], 'nrOfPostsAfter.as[Long])) { (topicId, postId, nrOfPostsBefore, nrOfPostsAfter) =>
-      onComplete(dbApi.postPagination(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)){
-        case Success(posts) => complete(posts)
-        case Failure(_) => complete(StatusCodes.InternalServerError)
+      if(nrOfPostsBefore >= 0 && nrOfPostsAfter >= 0) {
+        onComplete(dbApi.postPagination(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)) {
+          case Success(posts) => complete(posts)
+          case Failure(_) => complete(StatusCodes.InternalServerError)
+        }
+      } else {
+        complete(StatusCodes.BadRequest, NegativeParametersFailure.apply())
       }
     }
   }

@@ -15,6 +15,7 @@ import dto.requests.NewTopicRequestDto.{InvalidEmailAddress, InvalidSubjectLengt
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import validation.ValidationFailure
+import validation.failures.NegativeParametersFailure
 
 
 class RequestsTest extends AnyWordSpec
@@ -35,7 +36,7 @@ class RequestsTest extends AnyWordSpec
       |   2. add new topic to the database
       |   3. add new post to the database
       |   4. return OK status
-      |   5. return ids for user, topic and post in the json format
+      |   5. return ids for user, topic and post in json format
     """.stripMargin in {
 
       val nickname = "Paweł"
@@ -86,7 +87,7 @@ class RequestsTest extends AnyWordSpec
       |   2. add new topic to the database
       |   3. add new post to the database
       |   4. return OK status
-      |   5. return ids for user, topic and post in the json format
+      |   5. return ids for user, topic and post in json format
     """.stripMargin in {
 
       val nickname = "nick_2"
@@ -134,7 +135,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a invalid POST request to the addNewTopic path
-      |   1. send back to the client, a list of validation errors
+      |   1. send back to the client, a list of validation errors in json format
     """.stripMargin in {
 
       val nickname = "Paweł"
@@ -165,13 +166,55 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a valid GET request to the pagination path
-      |   1. return sorted by timestamp sequence of posts around specified post in the json format
+      |   1. return sorted by timestamp sequence of posts around specified post in json format
     """.stripMargin in {
 
       Get(paginationRequestString("1", "1", "4", "2")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
         responseAs[Seq[PostDto]] shouldBe Seq(post1, post2, post3, post4, post5, post6, post7)
+      }
+    }
+
+    """
+      |for a valid GET request to the pagination path, if maxNrOfReturnedPosts is exceeded
+      |   1. return sorted by timestamp sequence of posts around specified post in json format, which is proportionally cut
+    """.stripMargin in {
+
+      Get(paginationRequestString("1", "1", "4", "3")) ~> routes ~> check {
+        status shouldBe OK
+        contentType shouldBe `application/json`
+        responseAs[Seq[PostDto]] shouldBe Seq(post1, post2, post3, post4, post5, post6)
+      }
+    }
+
+    """
+      |for a invalid GET request to the pagination path
+      |   1. return NegativeParameters in json format
+    """.stripMargin in {
+
+      Get(paginationRequestString("1", "1", "-4", "2")) ~> routes ~> check {
+        status shouldBe BadRequest
+        contentType shouldBe `application/json`
+        responseAs[NegativeParametersFailure] shouldBe NegativeParametersFailure.apply()
+      }
+    }
+
+    """
+      |for a valid GET request to the pagination path if topic or post is not found
+      |   1. return empty sequence in json format
+    """.stripMargin in {
+
+      Get(paginationRequestString("5", "1", "4", "2")) ~> routes ~> check {
+        status shouldBe OK
+        contentType shouldBe `application/json`
+        responseAs[Seq[PostDto]] shouldBe Seq()
+      }
+
+      Get(paginationRequestString("1", "12", "4", "2")) ~> routes ~> check {
+        status shouldBe OK
+        contentType shouldBe `application/json`
+        responseAs[Seq[PostDto]] shouldBe Seq()
       }
     }
   }

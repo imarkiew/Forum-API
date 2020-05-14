@@ -15,7 +15,8 @@ case class Config(
                    subjectMinLength: Int,
                    subjectMaxLength: Int,
                    contentMinLength: Int,
-                   contentMaxLength: Int
+                   contentMaxLength: Int,
+                   maxNrOfReturnedPosts: Int
                  )
 
 

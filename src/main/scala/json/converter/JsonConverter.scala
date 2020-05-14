@@ -1,13 +1,13 @@
 package json.converter
 
 import java.time.Instant
-
 import spray.json._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import dto.entities.PostDto
 import dto.requests.NewTopicRequestDto
 import dto.heplers.AddNewTopicRequestIds
 import validation.ValidationFailure
+import validation.failures.NegativeParametersFailure
 import scala.util.Try
 
 
@@ -15,6 +15,7 @@ trait JsonConverter extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val newTopicRequestJsonFormat: RootJsonFormat[NewTopicRequestDto] = jsonFormat5(NewTopicRequestDto.apply)
   implicit val newTopicRequestResponseJsonFormat: RootJsonFormat[AddNewTopicRequestIds] = jsonFormat3(AddNewTopicRequestIds)
   implicit val postDtoJsonFormat: RootJsonFormat[PostDto] = jsonFormat6(PostDto)
+  implicit val negativeParametersValidationFailureJsonFormat: RootJsonFormat[NegativeParametersFailure] = jsonFormat1(NegativeParametersFailure)
 
   // marked as lazy, since there were some initialization problems with Java in Scala app
   implicit lazy val timestampJsFormat: RootJsonFormat[Instant] = new RootJsonFormat[Instant]  {
