@@ -1,7 +1,6 @@
 package json.converter
 
-import java.time.Instant
-import spray.json._
+import spray.json.{JsValue, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import dto.entities.PostDto
 import dto.requests.NewTopicRequestDto
@@ -9,22 +8,34 @@ import dto.heplers.AddNewTopicRequestIds
 import validation.ValidationFailure
 import validation.failures.NegativeParametersFailure
 import scala.util.Try
+import utils.Utils.stringToTimestamp
 
 
 trait JsonConverter extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val newTopicRequestJsonFormat: RootJsonFormat[NewTopicRequestDto] = jsonFormat5(NewTopicRequestDto.apply)
   implicit val newTopicRequestResponseJsonFormat: RootJsonFormat[AddNewTopicRequestIds] = jsonFormat3(AddNewTopicRequestIds)
-  implicit val postDtoJsonFormat: RootJsonFormat[PostDto] = jsonFormat6(PostDto)
   implicit val negativeParametersValidationFailureJsonFormat: RootJsonFormat[NegativeParametersFailure] = jsonFormat1(NegativeParametersFailure)
 
-  // marked as lazy, since there were some initialization problems with Java in Scala app
-  implicit lazy val timestampJsFormat: RootJsonFormat[Instant] = new RootJsonFormat[Instant]  {
-    def write(timestamp: Instant): JsValue = JsObject("timestamp" -> JsString(timestamp.toString))
-    def read(json: JsValue): Instant = {
-      json.asJsObject().getFields("timestamp") match {
-        case Seq(JsString(timestamp)) => Instant.parse(timestamp)
-        case _ => throw new RuntimeException("Exception during parsing json value to timestamp")
-      }
+  implicit val postDtoJsonFormat: RootJsonFormat[PostDto] = new RootJsonFormat[PostDto]  {
+    def write(postDto: PostDto): JsValue = JsObject(
+      "content" -> JsString(postDto.content),
+      "secretKey" -> JsString(postDto.secretKey),
+      "postTimestamp" -> JsString(postDto.postTimestamp.toString),
+      "userId" -> JsNumber(postDto.userId),
+      "topicId" -> JsNumber(postDto.topicId),
+      "postId" -> JsNumber(postDto.postId.get)
+    )
+
+    def read(json: JsValue): PostDto = {
+      val fields = json.asJsObject().fields
+      PostDto(
+        fields("content").convertTo[String],
+        fields("secretKey").convertTo[String],
+        stringToTimestamp(fields("postTimestamp").convertTo[String]).get,
+        fields("userId").convertTo[Long],
+        fields("topicId").convertTo[Long],
+        fields("postId").convertTo[Option[Long]]
+      )
     }
   }
 
