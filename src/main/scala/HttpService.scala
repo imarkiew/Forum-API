@@ -6,7 +6,7 @@ import cats.data.Validated.{Invalid, Valid}
 import dto.requests.NewTopicRequestDto
 import json.converter.JsonConverter
 import model.db.impl.DBAPI
-import validation.failures.NegativeParametersFailure
+import validation.failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
@@ -32,7 +32,10 @@ trait HttpService extends JsonConverter {
     (get & parameter('topicId.as[Long], 'postId.as[Long], 'nrOfPostsBefore.as[Long], 'nrOfPostsAfter.as[Long])) { (topicId, postId, nrOfPostsBefore, nrOfPostsAfter) =>
       if(nrOfPostsBefore >= 0 && nrOfPostsAfter >= 0) {
         onComplete(dbApi.postPagination(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)) {
-          case Success(posts) => complete(posts)
+          case Success(eitherPosts) => eitherPosts match {
+            case Left(posts) => complete(posts)
+            case Right(TopicOrPostIsNotPresentFailure) => complete(StatusCodes.NotFound, TopicOrPostIsNotPresentFailure.apply())
+          }
           case Failure(_) => complete(StatusCodes.InternalServerError)
         }
       } else {

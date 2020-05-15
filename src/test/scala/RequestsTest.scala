@@ -15,7 +15,7 @@ import dto.requests.NewTopicRequestDto.{InvalidEmailAddress, InvalidSubjectLengt
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import validation.ValidationFailure
-import validation.failures.NegativeParametersFailure
+import validation.failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
 
 
 class RequestsTest extends AnyWordSpec
@@ -190,7 +190,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a invalid GET request to the pagination path
-      |   1. return NegativeParameters in json format
+      |   1. return NegativeParametersFailure in json format
     """.stripMargin in {
 
       Get(paginationRequestString("1", "1", "-4", "2")) ~> routes ~> check {
@@ -201,20 +201,20 @@ class RequestsTest extends AnyWordSpec
     }
 
     """
-      |for a valid GET request to the pagination path if topic or post is not found
-      |   1. return empty sequence in json format
+      |for a valid GET request to the pagination path if a topic or post is not found
+      |   1. return TopicOrPostIsNotPresentFailure in json format
     """.stripMargin in {
 
       Get(paginationRequestString("5", "1", "4", "2")) ~> routes ~> check {
-        status shouldBe OK
+        status shouldBe NotFound
         contentType shouldBe `application/json`
-        responseAs[Seq[PostDto]] shouldBe Seq()
+        responseAs[TopicOrPostIsNotPresentFailure] shouldBe TopicOrPostIsNotPresentFailure.apply()
       }
 
       Get(paginationRequestString("1", "12", "4", "2")) ~> routes ~> check {
-        status shouldBe OK
+        status shouldBe NotFound
         contentType shouldBe `application/json`
-        responseAs[Seq[PostDto]] shouldBe Seq()
+        responseAs[TopicOrPostIsNotPresentFailure] shouldBe TopicOrPostIsNotPresentFailure.apply()
       }
     }
   }

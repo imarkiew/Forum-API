@@ -8,12 +8,15 @@ import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
 import scala.concurrent.ExecutionContext
 import config.Config
+import validation.failures.TopicOrPostIsNotPresentFailure
 
 
 trait DBIORepo extends PostsEntity { self: SlickConfig =>
 
   import driver.api._
   implicit val executionContext: ExecutionContext
+
+  protected def checkIfTopicAndPostExist(topicId: Long, postId: Long): DBIO[Boolean] = posts.filter(x => x.topicId === topicId && x.postId === postId).exists.result
 
   protected def findUserDbio(externalUser: UserDto): DBIO[Option[UserDto]] =
     users.filter(user => user.nickname === externalUser.nickname && user.email === externalUser.email).result.headOption
@@ -36,7 +39,7 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     posts.map(post => (post.content, post.secretKey, post.postTimestamp, post.userId, post.topicId)) returning posts.map(_.postId) +=
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
-  protected def postsPaginationDbio(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Seq[PostDto]] = {
+  protected def postsPaginationDbio(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Either[Seq[PostDto], TopicOrPostIsNotPresentFailure.type]] = {
     val maxNrOfRequiredPosts = nrOfPostsBefore + nrOfPostsAfter + 1
     val maxNrOfReturnedPosts = Config.appConfig.maxNrOfReturnedPosts
 
@@ -47,12 +50,15 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
       ((nrOfPostsBefore.toDouble / factor).floor.toLong, (nrOfPostsAfter.toDouble / factor).floor.toLong)
     }
 
-    (for {
-      middlePostTimestamp <- posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.headOption
-      requiredTopic = posts.filter(x => x.topicId === topicId)
-      posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfterChecked + 1).unionAll( // unionAll preserves the order
-        requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBeforeChecked)).result
-    } yield posts).transactionally
+    checkIfTopicAndPostExist(topicId, postId).flatMap{
+      case true => for {
+        middlePostTimestamp <- posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.headOption
+        requiredTopic = posts.filter(x => x.topicId === topicId)
+        posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfterChecked + 1).unionAll( // unionAll preserves the order
+          requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBeforeChecked)).result
+      } yield Left(posts)
+      case _ => DBIO.successful(Right(TopicOrPostIsNotPresentFailure))
+    }.transactionally
   }
 
   protected def addTopicDbio(newTopic: TopicDto): DBIO[Long] = topics.map(topic => (topic.subject, topic.lastPostTimestamp)) returning topics.map(_.topicId) +=
