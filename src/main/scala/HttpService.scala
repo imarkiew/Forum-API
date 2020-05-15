@@ -28,6 +28,18 @@ trait HttpService extends JsonConverter {
       }
     }
   } ~
+  path("topNTopics") {
+    (get & parameter('offset.as[Long], 'limit.as[Long])) { (offset, limit) =>
+      if(offset >= 0 && limit >= 0){
+        onComplete(dbApi.topNTopics(offset, limit)) {
+          case Success(topics) => complete(topics)
+          case Failure(_) => complete(StatusCodes.InternalServerError)
+        }
+      } else {
+        complete(StatusCodes.BadRequest, NegativeParametersFailure.apply())
+      }
+    }
+  } ~
   path("pagination") {
     (get & parameter('topicId.as[Long], 'postId.as[Long], 'nrOfPostsBefore.as[Long], 'nrOfPostsAfter.as[Long])) { (topicId, postId, nrOfPostsBefore, nrOfPostsAfter) =>
       if(nrOfPostsBefore >= 0 && nrOfPostsAfter >= 0) {

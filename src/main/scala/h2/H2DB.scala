@@ -59,8 +59,10 @@ object H2DB {
       | ('nick_2', 'nick2@gmail.com');
       |
       |insert into topics(subject, last_post_timestamp) values
-      | ('subject_1', '2020-04-22T19:10:25.474Z'),
-      | ('subject_2', '2019-03-27T08:15:52.194Z');
+      | ('subject_1', '2020-05-14T16:23:45.456Z'),
+      | ('subject_2', '2019-03-27T08:15:52.194Z'),
+      | ('subject_3', '2019-11-03T10:10:34.122Z'),
+      | ('subject_4', '2018-08-09T22:04:07.677Z');
       |
       |insert into posts(content, secret_key, post_timestamp, user_id_fk, topic_id_fk) values
       | ('content_1', 'secret_key_1', '2020-04-22T19:10:25.474Z', 1, 1),
@@ -70,6 +72,8 @@ object H2DB {
       | ('content_5', 'secret_key_5', '2018-10-08T14:28:54.374Z', 2, 1),
       | ('content_6', 'secret_key_6', '2020-03-27T08:15:52.004Z', 2, 1),
       | ('content_7', 'secret_key_7', '2020-05-14T16:23:45.456Z', 1, 1),
-      | ('content_8', 'secret_key_8', '2019-02-06T17:02:29.000Z', 2, 1);
+      | ('content_8', 'secret_key_8', '2019-02-06T17:02:29.000Z', 2, 1),
+      | ('content_9', 'secret_key_9', '2019-11-03T10:10:34.122Z', 2, 3),
+      | ('content_10', 'secret_key_10', '2018-08-09T22:04:07.677Z', 1, 4);
     """.stripMargin
 }

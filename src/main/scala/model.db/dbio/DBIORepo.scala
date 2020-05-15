@@ -88,4 +88,6 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
       }
     } yield AddNewTopicRequestIds(userId, topicId, postId)).transactionally
   }
+
+  protected def topNTopicsDbio(offset: Long, limit: Long): DBIO[Seq[TopicDto]] = topics.sortBy(_.lastPostTimestamp.desc).drop(offset).take(limit).result
 }

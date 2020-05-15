@@ -2,12 +2,11 @@ package json.converter
 
 import spray.json.{JsValue, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import dto.entities.PostDto
+import dto.entities.{PostDto, TopicDto}
 import dto.requests.NewTopicRequestDto
 import dto.heplers.AddNewTopicRequestIds
 import validation.ValidationFailure
 import validation.failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
-
 import scala.util.Try
 import utils.Utils.stringToTimestamp
 
@@ -17,6 +16,23 @@ trait JsonConverter extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val newTopicRequestResponseJsonFormat: RootJsonFormat[AddNewTopicRequestIds] = jsonFormat3(AddNewTopicRequestIds)
   implicit val negativeParametersValidationFailureJsonFormat: RootJsonFormat[NegativeParametersFailure] = jsonFormat1(NegativeParametersFailure)
   implicit val topicOrPostIsNotPresentFailureJsonFormat: RootJsonFormat[TopicOrPostIsNotPresentFailure] = jsonFormat1(TopicOrPostIsNotPresentFailure)
+
+  implicit val topicDtoJsonFormat: RootJsonFormat[TopicDto] = new RootJsonFormat[TopicDto] {
+    def write(topicDto: TopicDto): JsValue = JsObject(
+      "subject" -> JsString(topicDto.subject),
+      "lastPostTimestamp" -> JsString(topicDto.lastPostTimestamp.toString),
+      "topicId" -> JsNumber(topicDto.topicId.get)
+    )
+
+    def read(json: JsValue): TopicDto = {
+      val fields = json.asJsObject().fields
+      TopicDto(
+        fields("subject").convertTo[String],
+        stringToTimestamp(fields("lastPostTimestamp").convertTo[String]).get,
+        fields("topicId").convertTo[Option[Long]]
+      )
+    }
+  }
 
   implicit val postDtoJsonFormat: RootJsonFormat[PostDto] = new RootJsonFormat[PostDto]  {
     def write(postDto: PostDto): JsValue = JsObject(

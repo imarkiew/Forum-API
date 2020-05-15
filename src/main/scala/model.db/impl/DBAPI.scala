@@ -23,4 +23,5 @@ trait DBAPI extends DBIORepo { self: SlickConfig =>
 
   def findTopic(id: Long): Future[Option[TopicDto]] = findTopicDbio(id)
   def addNewTopicRequest(newTopicRequest: NewTopicRequestDto): Future[AddNewTopicRequestIds] = addNewTopicRequestDbio(newTopicRequest)
+  def topNTopics(offset: Long, limit: Long): Future[Seq[TopicDto]] = topNTopicsDbio(offset, limit)
 }
