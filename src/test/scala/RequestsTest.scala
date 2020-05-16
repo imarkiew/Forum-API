@@ -3,30 +3,31 @@ import org.scalatest.matchers.should.Matchers
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.model.StatusCodes._
 import dto.entities._
-import dto.heplers.AddNewTopicRequestIds
-import dto.requests.NewTopicRequestDto
+import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
+import dto.requests.{NewPostRequestDto, NewTopicRequestDto}
 import h2.H2DB
 import json.converter.JsonConverter
 import model.db.impl.H2DBImpl
 import utils.Utils.stringToTimestamp
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import failures.validation.ValidationFailures.{InvalidEmailAddress, InvalidSubjectLength}
-import org.scalatest.BeforeAndAfterAll
+import failures.validation.ValidationFailures._
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import validation.ValidationFailure
-import failures.adhoc.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
+import failures.adhoc.{NegativeParametersFailure, TopicIsNotPresentFailure, TopicOrPostIsNotPresentFailure}
 
 
 class RequestsTest extends AnyWordSpec
   with Matchers
   with BeforeAndAfterAll
+  with BeforeAndAfterEach
   with ScalatestRouteTest
   with HttpService
   with JsonConverter {
 
   override val dbApi = H2DBImpl
-  override def beforeAll() = H2DB.initDB
+  override def beforeEach() = H2DB.resetDB
   override def afterAll() = H2DB.shutdownDB
 
   "The Forum-API" should {
@@ -155,7 +156,7 @@ class RequestsTest extends AnyWordSpec
       val subject = "Random topic"
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = NewTopicRequestDto(nickname, email, subject , content, timestamp)
+      val newTopic = NewTopicRequestDto(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
 
@@ -206,7 +207,7 @@ class RequestsTest extends AnyWordSpec
       val subject = "Random topic"
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = NewTopicRequestDto(nickname, email, subject , content, timestamp)
+      val newTopic = NewTopicRequestDto(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
 
@@ -254,12 +255,75 @@ class RequestsTest extends AnyWordSpec
       val subject = ""
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = NewTopicRequestDto(nickname, email, subject , content, timestamp)
+      val newTopic = NewTopicRequestDto(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
         status shouldBe BadRequest
         contentType shouldBe `application/json`
         responseAs[List[ValidationFailure]].map(_.validationError) shouldBe List(InvalidEmailAddress.validationError, InvalidSubjectLength.validationError)
+      }
+    }
+  }
+
+  "The Forum-API" should {
+    """
+      |for a valid POST request to the addNewPost path
+      |   1. add new user if it does not exist
+      |   2. add post
+      |   3. send back to client userId and postId in json format
+    """.stripMargin in {
+
+      val newPost = NewPostRequestDto("Pjoter007", "piotrw11u@wp.pl", "No za grosz szacunku \n Czego oni ich tam uczą", 2L, "2020-05-16T14:32:10.062Z")
+
+      Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
+        status shouldBe OK
+        contentType shouldBe `application/json`
+        responseAs[AddNewPostRequestIds] shouldBe AddNewPostRequestIds(3L, 11L)
+      }
+    }
+
+      """
+        |for a valid POST request to the addNewPost path
+        |   1. do not add user if it exists
+        |   2. add post
+        |   3. send back to client userId and postId in json format
+      """.stripMargin in {
+
+        val newPost = NewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 2L, "2020-05-16T14:32:10.062Z")
+
+        Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
+          status shouldBe OK
+          contentType shouldBe `application/json`
+          responseAs[AddNewPostRequestIds] shouldBe AddNewPostRequestIds(1L, 11L)
+        }
+      }
+
+      """
+        |for a valid POST request to the addNewPost path if topic is not found
+        |   1. send back to client TopicIsNotPresentFailure in json format
+      """.stripMargin in {
+
+        val newPost = NewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 10L, "2020-05-16T14:32:10.062Z")
+
+        Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
+          status shouldBe NotFound
+          contentType shouldBe `application/json`
+          responseAs[TopicIsNotPresentFailure] shouldBe TopicIsNotPresentFailure.apply()
+        }
+      }
+
+      """
+        |for a invalid POST request to the addNewPost path
+        |   1. send back to client a list of validation errors in json format
+      """.stripMargin in {
+
+        val newPost = NewPostRequestDto("nick_1", "nick1gmail.com", "", -1L, "2020-05-16T14:32:10:062Z")
+
+        Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
+          status shouldBe BadRequest
+          contentType shouldBe `application/json`
+          responseAs[List[ValidationFailure]].map(_.validationError) shouldBe
+            List(InvalidEmailAddress.validationError, InvalidContentLength.validationError, InvalidNegativeId.validationError, InvalidTimestamp.validationError)
       }
     }
   }

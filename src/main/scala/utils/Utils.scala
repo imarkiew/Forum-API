@@ -40,4 +40,6 @@ object Utils {
     booleanCheckWrapper(content.length >= appConfig.contentMinLength && content.length <= appConfig.contentMaxLength, content, InvalidContentLength)
 
   def validateTimestamp(timestamp: String): ValidationResult[String] = booleanCheckWrapper(stringToTimestamp(timestamp).isSuccess, timestamp, InvalidTimestamp)
+
+  def validateId(id: Long): ValidationResult[Long] = booleanCheckWrapper(id >= 0, id, InvalidNegativeId)
 }

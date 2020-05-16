@@ -20,8 +20,13 @@ object H2DB {
     statement.execute(addRecords)
   }
 
+  def resetDB: Unit = {
+    connection.createStatement().execute("drop all objects")
+    initDB
+  }
+
   def shutdownDB: Unit = {
-    connection.createStatement().execute("SHUTDOWN")
+    connection.createStatement().execute("shutdown")
     connection.close()
   }
 
