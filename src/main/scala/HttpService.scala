@@ -6,7 +6,7 @@ import cats.data.Validated.{Invalid, Valid}
 import dto.requests.NewTopicRequestDto
 import json.converter.JsonConverter
 import model.db.impl.DBAPI
-import failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
+import failures.adhoc.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 

@@ -4,9 +4,9 @@ import config.slick.SlickConfig
 import dto.entities.{PostDto, TopicDto, UserDto}
 import dto.heplers.AddNewTopicRequestIds
 import dto.requests.NewTopicRequestDto
+import failures.adhoc.TopicOrPostIsNotPresentFailure
 import model.db.dbio.DBIORepo
 import slick.dbio.DBIO
-import failures.TopicOrPostIsNotPresentFailure
 import scala.concurrent.{ExecutionContext, Future}
 
 

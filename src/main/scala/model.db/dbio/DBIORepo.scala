@@ -6,9 +6,10 @@ import dto.heplers.AddNewTopicRequestIds
 import dto.requests.NewTopicRequestDto
 import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
+
 import scala.concurrent.ExecutionContext
 import config.Config
-import failures.TopicOrPostIsNotPresentFailure
+import failures.adhoc.TopicOrPostIsNotPresentFailure
 
 
 trait DBIORepo extends PostsEntity { self: SlickConfig =>

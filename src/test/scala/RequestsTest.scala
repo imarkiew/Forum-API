@@ -11,11 +11,11 @@ import model.db.impl.H2DBImpl
 import utils.Utils.stringToTimestamp
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
-import dto.requests.NewTopicRequestDto.{InvalidEmailAddress, InvalidSubjectLength}
+import failures.validation.ValidationFailures.{InvalidEmailAddress, InvalidSubjectLength}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import validation.ValidationFailure
-import failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
+import failures.adhoc.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
 
 
 class RequestsTest extends AnyWordSpec
