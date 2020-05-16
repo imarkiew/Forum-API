@@ -6,7 +6,7 @@ import dto.heplers.AddNewTopicRequestIds
 import dto.requests.NewTopicRequestDto
 import model.db.dbio.DBIORepo
 import slick.dbio.DBIO
-import validation.failures.TopicOrPostIsNotPresentFailure
+import failures.TopicOrPostIsNotPresentFailure
 import scala.concurrent.{ExecutionContext, Future}
 
 

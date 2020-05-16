@@ -15,7 +15,7 @@ import dto.requests.NewTopicRequestDto.{InvalidEmailAddress, InvalidSubjectLengt
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import validation.ValidationFailure
-import validation.failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
+import failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
 
 
 class RequestsTest extends AnyWordSpec

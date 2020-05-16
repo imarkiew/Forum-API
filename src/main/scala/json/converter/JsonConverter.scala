@@ -6,7 +6,7 @@ import dto.entities.{PostDto, TopicDto}
 import dto.requests.NewTopicRequestDto
 import dto.heplers.AddNewTopicRequestIds
 import validation.ValidationFailure
-import validation.failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
+import failures.{NegativeParametersFailure, TopicOrPostIsNotPresentFailure}
 import scala.util.Try
 import utils.Utils.stringToTimestamp
 

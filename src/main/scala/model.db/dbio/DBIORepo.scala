@@ -8,7 +8,7 @@ import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
 import scala.concurrent.ExecutionContext
 import config.Config
-import validation.failures.TopicOrPostIsNotPresentFailure
+import failures.TopicOrPostIsNotPresentFailure
 
 
 trait DBIORepo extends PostsEntity { self: SlickConfig =>
