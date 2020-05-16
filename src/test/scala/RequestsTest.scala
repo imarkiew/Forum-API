@@ -4,7 +4,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.model.StatusCodes._
 import dto.entities._
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{NewPostRequestDto, NewTopicRequestDto}
+import dto.requests.{NewPostRequestDto, NewTopicRequestDto, UpdatePostRequestDto}
 import h2.H2DB
 import json.converter.JsonConverter
 import model.db.impl.H2DBImpl
@@ -15,7 +15,7 @@ import failures.validation.ValidationFailures._
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.concurrent.ScalaFutures
 import validation.ValidationFailure
-import failures.adhoc.{NegativeParametersFailure, TopicIsNotPresentFailure, TopicOrPostIsNotPresentFailure}
+import failures.adhoc._
 
 
 class RequestsTest extends AnyWordSpec
@@ -40,7 +40,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a valid GET request to the topNTopics path
-      |   1. return sorted by last post timestamp sequence of the most recent topics in json format
+      |   1. return a sequence of the most recent topics which is sorted by last post timestamp in json format
     """.stripMargin in {
 
       Get(topNTopicsRequestString("0", "3")) ~> routes ~> check {
@@ -64,7 +64,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for an invalid GET request with negative parameters to the topNTopics path
-      |   1. return NegativeParametersFailure in json format
+      |   1. return the NegativeParametersFailure in json format
     """.stripMargin in {
 
       Get(topNTopicsRequestString("-2", "1")) ~> routes ~> check {
@@ -88,7 +88,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a valid GET request to the pagination path
-      |   1. return sorted by timestamp sequence of posts around specified post in json format
+      |   1. return a sequence of posts which is sorted by timestamp around specified post in json format
     """.stripMargin in {
 
       Get(paginationRequestString("1", "1", "4", "2")) ~> routes ~> check {
@@ -99,8 +99,8 @@ class RequestsTest extends AnyWordSpec
     }
 
     """
-      |for a valid GET request to the pagination path, if maxNrOfReturnedPosts is exceeded
-      |   1. return sorted by timestamp sequence of posts around specified post in json format, which is proportionally cut
+      |for a valid GET request to the pagination path, if the maxNrOfReturnedPosts is exceeded
+      |   1. return a sequence of posts which is sorted by timestamp around specified post and proportionally cut in json format
     """.stripMargin in {
 
       Get(paginationRequestString("1", "1", "4", "3")) ~> routes ~> check {
@@ -112,7 +112,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for an invalid GET request with negative parameters to the pagination path
-      |   1. return NegativeParametersFailure in json format
+      |   1. return the NegativeParametersFailure in json format
     """.stripMargin in {
 
       Get(paginationRequestString("1", "1", "-4", "2")) ~> routes ~> check {
@@ -124,7 +124,7 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a valid GET request to the pagination path if a topic or post is not found
-      |   1. return TopicOrPostIsNotPresentFailure in json format
+      |   1. return the TopicOrPostIsNotPresentFailure in json format
     """.stripMargin in {
 
       Get(paginationRequestString("5", "1", "4", "2")) ~> routes ~> check {
@@ -144,11 +144,10 @@ class RequestsTest extends AnyWordSpec
   "The Forum-API" should {
     """
       |for a valid POST request to the addNewTopic path:
-      |   1. add user if one doesn't exist in the database
-      |   2. add new topic to the database
-      |   3. add new post to the database
-      |   4. return OK status
-      |   5. return ids for user, topic and post in json format
+      |   1. add a user if one doesn't exist in the database
+      |   2. add a new topic to the database
+      |   3. add a new post to the database
+      |   4. return ids for a user, topic and post in json format
     """.stripMargin in {
 
       val nickname = "Paweł"
@@ -195,11 +194,10 @@ class RequestsTest extends AnyWordSpec
 
     """
       |for a valid POST request to the addNewTopic path:
-      |   1. do not add user if it already exists in database (only return its id)
-      |   2. add new topic to the database
-      |   3. add new post to the database
-      |   4. return OK status
-      |   5. return ids for user, topic and post in json format
+      |   1. do not add a user if it already exists in the database (only return its id)
+      |   2. add a new topic to the database
+      |   3. add a new post to the database
+      |   4. return ids for a user, topic and post in json format
     """.stripMargin in {
 
       val nickname = "nick_2"
@@ -268,9 +266,9 @@ class RequestsTest extends AnyWordSpec
   "The Forum-API" should {
     """
       |for a valid POST request to the addNewPost path
-      |   1. add new user if it does not exist
-      |   2. add post
-      |   3. send back to client userId and postId in json format
+      |   1. add a new user if it does not exist
+      |   2. add a new post
+      |   3. send back to client a userId and postId in json format
     """.stripMargin in {
 
       val newPost = NewPostRequestDto("Pjoter007", "piotrw11u@wp.pl", "No za grosz szacunku \n Czego oni ich tam uczą", 2L, "2020-05-16T14:32:10.062Z")
@@ -284,9 +282,9 @@ class RequestsTest extends AnyWordSpec
 
       """
         |for a valid POST request to the addNewPost path
-        |   1. do not add user if it exists
-        |   2. add post
-        |   3. send back to client userId and postId in json format
+        |   1. do not add a new user if it exists
+        |   2. add a new post
+        |   3. send back to the client a userId and postId in json format
       """.stripMargin in {
 
         val newPost = NewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 2L, "2020-05-16T14:32:10.062Z")
@@ -299,8 +297,8 @@ class RequestsTest extends AnyWordSpec
       }
 
       """
-        |for a valid POST request to the addNewPost path if topic is not found
-        |   1. send back to client TopicIsNotPresentFailure in json format
+        |for a valid POST request to the addNewPost path if a topic is not found
+        |   1. send back to the client the TopicIsNotPresentFailure in json format
       """.stripMargin in {
 
         val newPost = NewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 10L, "2020-05-16T14:32:10.062Z")
@@ -314,7 +312,7 @@ class RequestsTest extends AnyWordSpec
 
       """
         |for a invalid POST request to the addNewPost path
-        |   1. send back to client a list of validation errors in json format
+        |   1. send back the to client a list of validation errors in json format
       """.stripMargin in {
 
         val newPost = NewPostRequestDto("nick_1", "nick1gmail.com", "", -1L, "2020-05-16T14:32:10:062Z")
@@ -324,6 +322,60 @@ class RequestsTest extends AnyWordSpec
           contentType shouldBe `application/json`
           responseAs[List[ValidationFailure]].map(_.validationError) shouldBe
             List(InvalidEmailAddress.validationError, InvalidContentLength.validationError, InvalidNegativeId.validationError, InvalidTimestamp.validationError)
+      }
+    }
+  }
+
+  "The Forum-API" should {
+    """
+      |for a valid PATCH request to the updatePost path
+      |   1. return the OK status
+    """.stripMargin in {
+
+      val partialUpdate = UpdatePostRequestDto("updated_content", 3, "secret_key_3", "2020-01-01T01:07:00.007Z")
+
+      Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check(status shouldBe OK)
+    }
+
+    """
+      |for a valid PATCH request to the updatePost path if the post is not found
+      |   1. return to the client the PostIsNotPresentFailure in json format
+    """.stripMargin in {
+
+      val partialUpdate = UpdatePostRequestDto("updated_content", 15, "secret_key_3", "2020-01-01T01:07:00.007Z")
+
+      Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check {
+        status shouldBe NotFound
+        contentType shouldBe `application/json`
+        responseAs[PostIsNotPresentFailure] shouldBe PostIsNotPresentFailure.apply()
+      }
+    }
+
+    """
+      |for a valid PATCH request to the updatePost path if the secretKey is invalid
+      |   1. return to the client the SecretKeyIsInvalidFailure in json format
+    """.stripMargin in {
+
+      val partialUpdate = UpdatePostRequestDto("updated_content", 3, "xxx", "2020-01-01T01:07:00.007Z")
+
+      Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check {
+        status shouldBe BadRequest
+        contentType shouldBe `application/json`
+        responseAs[SecretKeyIsInvalidFailure] shouldBe SecretKeyIsInvalidFailure.apply()
+      }
+    }
+
+    """
+      |for a invalid PATCH request to the updatePost path
+      |   1. return to the client a list of errors in json format in
+    """.stripMargin in {
+
+      val partialUpdate = UpdatePostRequestDto("", 3, "secret_key_3", "01-01T01:07:00.007Z")
+
+      Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check {
+        status shouldBe BadRequest
+        contentType shouldBe `application/json`
+        responseAs[List[ValidationFailure]].map(_.validationError) shouldBe List(InvalidContentLength.validationError, InvalidTimestamp.validationError)
       }
     }
   }

@@ -1,3 +1,3 @@
 package failures.adhoc
 
-case class NegativeParametersFailure(validationFailure: String = "At least one parameter was negative, but should not have been")
+case class NegativeParametersFailure(failure: String = "At least one parameter was negative, but should not have been") extends Failure

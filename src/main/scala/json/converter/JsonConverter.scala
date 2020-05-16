@@ -3,10 +3,10 @@ package json.converter
 import spray.json.{JsValue, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import dto.entities.{PostDto, TopicDto}
-import dto.requests.{NewPostRequestDto, NewTopicRequestDto}
+import dto.requests.{NewPostRequestDto, NewTopicRequestDto, UpdatePostRequestDto}
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
 import validation.ValidationFailure
-import failures.adhoc.{NegativeParametersFailure, TopicIsNotPresentFailure, TopicOrPostIsNotPresentFailure}
+import failures.adhoc._
 import scala.util.Try
 import utils.Utils.stringToTimestamp
 
@@ -19,6 +19,9 @@ trait JsonConverter extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val newPostRequestDtoJsonFormat: RootJsonFormat[NewPostRequestDto] = jsonFormat5(NewPostRequestDto)
   implicit val newPostRequestResponseJsonFormat: RootJsonFormat[AddNewPostRequestIds] = jsonFormat2(AddNewPostRequestIds)
   implicit val topicIsNotPresentFailureJsonFormat: RootJsonFormat[TopicIsNotPresentFailure] = jsonFormat1(TopicIsNotPresentFailure)
+  implicit val updatePostRequestDtoJsonFormat: RootJsonFormat[UpdatePostRequestDto] = jsonFormat4(UpdatePostRequestDto)
+  implicit val postIsNotPresentFailureJsonFormat: RootJsonFormat[PostIsNotPresentFailure] = jsonFormat1(PostIsNotPresentFailure)
+  implicit val secretKeyIsInvalidFailureJsonFormat: RootJsonFormat[SecretKeyIsInvalidFailure] = jsonFormat1(SecretKeyIsInvalidFailure)
 
   implicit val topicDtoJsonFormat: RootJsonFormat[TopicDto] = new RootJsonFormat[TopicDto] {
     def write(topicDto: TopicDto): JsValue = JsObject(
