@@ -3,7 +3,7 @@ package model.db.dbio
 import config.slick.SlickConfig
 import dto.entities.{PostDto, TopicDto, UserDto}
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{NewPostRequestDto, NewTopicRequestDto, UpdatePostRequestDto}
+import dto.requests.{AddNewPostRequestDto, AddNewTopicRequestDto, UpdatePostRequestDto}
 import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
 import scala.concurrent.ExecutionContext
@@ -36,7 +36,7 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     posts.map(post => (post.content, post.secretKey, post.postTimestamp, post.userId, post.topicId)) returning posts.map(_.postId) +=
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
-  protected def addPostDBIO(newPostRequest: NewPostRequestDto): DBIO[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = topics.filter(_.topicId === newPostRequest.topicId).result.headOption.flatMap {
+  protected def addPostDBIO(newPostRequest: AddNewPostRequestDto): DBIO[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = topics.filter(_.topicId === newPostRequest.topicId).result.headOption.flatMap {
     case Some(topic) => for {
       userId <- addUserDBIO(UserDto(newPostRequest.nickname, newPostRequest.email))
       postId <- {
@@ -88,7 +88,7 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
 
   protected def findTopicDBIO(id: Long): DBIO[Option[TopicDto]] = topics.filter(_.topicId === id).result.headOption
 
-  protected def addTopicDBIO(newTopicRequest: NewTopicRequestDto): DBIO[AddNewTopicRequestIds] = {
+  protected def addTopicDBIO(newTopicRequest: AddNewTopicRequestDto): DBIO[AddNewTopicRequestIds] = {
     val externalUser = UserDto(newTopicRequest.nickname, newTopicRequest.email)
     val newTopic = TopicDto(newTopicRequest.subject, stringToTimestamp(newTopicRequest.timestamp).get)
     val userDbio = findUserDBIO(externalUser)

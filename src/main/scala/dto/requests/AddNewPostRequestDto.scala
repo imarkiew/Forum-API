@@ -1,23 +1,23 @@
 package dto.requests
 
 import cats.implicits._
-import validation.ValidationTypes.ValidationResult
 import validation.Validatable
+import validation.ValidationTypes.ValidationResult
 
 
-case class NewTopicRequestDto(nickname: String, email: String, subject: String, content: String, timestamp: String) extends Validatable[NewTopicRequestDto] {
+case class AddNewPostRequestDto(nickname: String, email: String, content: String, topicId: Long, timestamp: String) extends Validatable[AddNewPostRequestDto] {
 
-  override def validate: ValidationResult[NewTopicRequestDto] = (
+  override def validate: ValidationResult[AddNewPostRequestDto] = (
     validateNickname,
     validateEmail,
-    validateSubject,
     validateContent,
+    validateTopicId,
     validateTimestamp
-  ).mapN(NewTopicRequestDto.apply)
+  ).mapN(AddNewPostRequestDto.apply)
 
   private def validateNickname: ValidationResult[String] = utils.Utils.validateNickname(nickname)
   private def validateEmail: ValidationResult[String] = utils.Utils.validateEmail(email)
-  private def validateSubject: ValidationResult[String] = utils.Utils.validateSubject(subject)
   private def validateContent: ValidationResult[String] = utils.Utils.validateContent(content)
+  private def validateTopicId: ValidationResult[Long] = utils.Utils.validateId(topicId)
   private def validateTimestamp: ValidationResult[String] = utils.Utils.validateTimestamp(timestamp)
 }

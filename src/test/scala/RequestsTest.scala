@@ -4,7 +4,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.model.StatusCodes._
 import dto.entities._
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{NewPostRequestDto, NewTopicRequestDto, UpdatePostRequestDto}
+import dto.requests.{AddNewPostRequestDto, AddNewTopicRequestDto, UpdatePostRequestDto}
 import h2.H2DB
 import json.converter.JsonConverter
 import model.db.impl.H2DBImpl
@@ -155,7 +155,7 @@ class RequestsTest extends AnyWordSpec
       val subject = "Random topic"
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = NewTopicRequestDto(nickname, email, subject, content, timestamp)
+      val newTopic = AddNewTopicRequestDto(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
 
@@ -205,7 +205,7 @@ class RequestsTest extends AnyWordSpec
       val subject = "Random topic"
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = NewTopicRequestDto(nickname, email, subject, content, timestamp)
+      val newTopic = AddNewTopicRequestDto(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
 
@@ -253,7 +253,7 @@ class RequestsTest extends AnyWordSpec
       val subject = ""
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = NewTopicRequestDto(nickname, email, subject, content, timestamp)
+      val newTopic = AddNewTopicRequestDto(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
         status shouldBe BadRequest
@@ -271,7 +271,7 @@ class RequestsTest extends AnyWordSpec
       |   3. send back to client a userId and postId in json format
     """.stripMargin in {
 
-      val newPost = NewPostRequestDto("Pjoter007", "piotrw11u@wp.pl", "No za grosz szacunku \n Czego oni ich tam uczą", 2L, "2020-05-16T14:32:10.062Z")
+      val newPost = AddNewPostRequestDto("Pjoter007", "piotrw11u@wp.pl", "No za grosz szacunku \n Czego oni ich tam uczą", 2L, "2020-05-16T14:32:10.062Z")
 
       Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
         status shouldBe OK
@@ -287,7 +287,7 @@ class RequestsTest extends AnyWordSpec
         |   3. send back to the client a userId and postId in json format
       """.stripMargin in {
 
-        val newPost = NewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 2L, "2020-05-16T14:32:10.062Z")
+        val newPost = AddNewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 2L, "2020-05-16T14:32:10.062Z")
 
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe OK
@@ -301,7 +301,7 @@ class RequestsTest extends AnyWordSpec
         |   1. send back to the client the TopicIsNotPresentFailure in json format
       """.stripMargin in {
 
-        val newPost = NewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 10L, "2020-05-16T14:32:10.062Z")
+        val newPost = AddNewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 10L, "2020-05-16T14:32:10.062Z")
 
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe NotFound
@@ -315,7 +315,7 @@ class RequestsTest extends AnyWordSpec
         |   1. send back the to client a list of validation errors in json format
       """.stripMargin in {
 
-        val newPost = NewPostRequestDto("nick_1", "nick1gmail.com", "", -1L, "2020-05-16T14:32:10:062Z")
+        val newPost = AddNewPostRequestDto("nick_1", "nick1gmail.com", "", -1L, "2020-05-16T14:32:10:062Z")
 
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe BadRequest
