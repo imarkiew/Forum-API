@@ -3,7 +3,7 @@ package json.converter
 import spray.json.{JsValue, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import dto.entities.{PostDTO, TopicDTO}
-import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, DeletePostRequestDTO, UpdatePostRequestDTO}
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
 import validation.ValidationFailure
 import failures.adhoc._
@@ -22,6 +22,7 @@ trait JsonConverter extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val updatePostRequestDtoJsonFormat: RootJsonFormat[UpdatePostRequestDTO] = jsonFormat4(UpdatePostRequestDTO)
   implicit val postIsNotPresentFailureJsonFormat: RootJsonFormat[PostIsNotPresentFailure] = jsonFormat1(PostIsNotPresentFailure)
   implicit val secretKeyIsInvalidFailureJsonFormat: RootJsonFormat[SecretKeyIsInvalidFailure] = jsonFormat1(SecretKeyIsInvalidFailure)
+  implicit val deletePostRequestDTOJsonFormat: RootJsonFormat[DeletePostRequestDTO] = jsonFormat2(DeletePostRequestDTO)
 
   implicit val topicDtoJsonFormat: RootJsonFormat[TopicDTO] = new RootJsonFormat[TopicDTO] {
     def write(topicDto: TopicDTO): JsValue = JsObject(

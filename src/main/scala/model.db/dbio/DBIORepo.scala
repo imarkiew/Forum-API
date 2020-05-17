@@ -3,7 +3,7 @@ package model.db.dbio
 import config.slick.SlickConfig
 import dto.entities.{PostDTO, TopicDTO, UserDTO}
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, DeletePostRequestDTO, UpdatePostRequestDTO}
 import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
 import scala.concurrent.ExecutionContext
@@ -58,6 +58,17 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
         .filter(_.postId === updatePostRequest.postId)
         .map(x => (x.content, x.postTimestamp))
         .update((updatePostRequest.content, stringToTimestamp(updatePostRequest.timestamp).get)).flatMap(x => DBIO.successful(Left(x)))
+    }.transactionally
+  }
+
+  protected def deletePostDBIO(deletePostRequestDto: DeletePostRequestDTO): DBIO[Either[Int, Failure]] = {
+    posts.filter(_.postId === deletePostRequestDto.postId).result.headOption.flatMap {
+      case None => DBIO.successful(PostIsNotPresentFailure)
+      case Some(post) => DBIO.successful(post.secretKey == deletePostRequestDto.secretKey)
+    }.flatMap {
+      case PostIsNotPresentFailure => DBIO.successful(Right(PostIsNotPresentFailure.apply()))
+      case false => DBIO.successful(Right(SecretKeyIsInvalidFailure.apply()))
+      case true => posts.filter(_.postId === deletePostRequestDto.postId).delete.flatMap(x => DBIO.successful(Left(x)))
     }.transactionally
   }
 

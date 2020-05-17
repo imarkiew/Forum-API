@@ -3,10 +3,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
-import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, DeletePostRequestDTO, UpdatePostRequestDTO}
 import json.converter.JsonConverter
 import model.db.impl.DBAPI
 import failures.adhoc._
+
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
@@ -17,6 +18,7 @@ trait HttpService extends JsonConverter {
   implicit def executor: ExecutionContextExecutor
   val dbApi: DBAPI
 
+  // the routes could use some refactoring
   val routes = path("addNewTopic") {
     (post & entity(as[AddNewTopicRequestDTO])) { newTopicRequest =>
       newTopicRequest.validate match {
@@ -56,6 +58,22 @@ trait HttpService extends JsonConverter {
         }
         case Invalid(validationFailures @ NonEmptyList(_, _)) => complete(StatusCodes.BadRequest, validationFailures.toList)
       }
+    }
+  } ~
+  path("deletePost") {
+    (delete & entity(as[DeletePostRequestDTO])) { deletePostRequest =>
+      deletePostRequest.validate match {
+        case Valid(validDeletePostRequest) => onComplete(dbApi.deletePost(validDeletePostRequest)) {
+          case Success(eitherNrOfAffectedRecords) => eitherNrOfAffectedRecords match {
+            case Left(_) => complete(StatusCodes.OK)
+            case Right(failure: PostIsNotPresentFailure) => complete(StatusCodes.NotFound, failure)
+            case Right(failure: SecretKeyIsInvalidFailure) => complete(StatusCodes.BadRequest, failure)
+          }
+          case Failure(_) => complete(StatusCodes.InternalServerError)
+        }
+        case Invalid(validationFailures @ NonEmptyList(_, _)) => complete(StatusCodes.BadRequest, validationFailures.toList)
+      }
+
     }
   } ~
   path("topNTopics") {

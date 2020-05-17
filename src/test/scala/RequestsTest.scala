@@ -4,7 +4,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.model.StatusCodes._
 import dto.entities._
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, DeletePostRequestDTO, UpdatePostRequestDTO}
 import h2.H2DB
 import json.converter.JsonConverter
 import model.db.impl.H2DBImpl
@@ -311,7 +311,7 @@ class RequestsTest extends AnyWordSpec
       }
 
       """
-        |for a invalid POST request to the addNewPost path
+        |for an invalid POST request to the addNewPost path
         |   1. send back the to client a list of validation errors in json format
       """.stripMargin in {
 
@@ -366,7 +366,7 @@ class RequestsTest extends AnyWordSpec
     }
 
     """
-      |for a invalid PATCH request to the updatePost path
+      |for an invalid PATCH request to the updatePost path
       |   1. return to the client a list of errors in json format in
     """.stripMargin in {
 
@@ -376,6 +376,61 @@ class RequestsTest extends AnyWordSpec
         status shouldBe BadRequest
         contentType shouldBe `application/json`
         responseAs[List[ValidationFailure]].map(_.validationError) shouldBe List(InvalidContentLength.validationError, InvalidTimestamp.validationError)
+      }
+    }
+  }
+
+  "The Forum-API" should {
+
+    """
+      |for a valid DELETE request to the deletePost path
+      |   1. return the OK status
+    """.stripMargin in {
+
+      val deletePostRequest = DeletePostRequestDTO(4L, "secret_key_4")
+
+      Delete("/deletePost", HttpEntity(`application/json`, marshal(deletePostRequest).data.utf8String)) ~> routes ~> check(status shouldBe OK)
+    }
+
+    """
+      |for a valid DELETE request to the deletePost path if the postId is not found
+      |   1. return to the client the PostIsNotPresentFailure in json format
+    """.stripMargin in {
+
+      val deletePostRequest = DeletePostRequestDTO(35L, "secret_key_4")
+
+      Delete("/deletePost", HttpEntity(`application/json`, marshal(deletePostRequest).data.utf8String)) ~> routes ~> check {
+        status shouldBe NotFound
+        contentType shouldBe `application/json`
+        responseAs[PostIsNotPresentFailure] shouldBe PostIsNotPresentFailure.apply()
+      }
+    }
+
+    """
+      |for a valid DELETE request to the deletePost path if the secretKey is invalid
+      |   1. return to the client the SecretKeyIsInvalidFailure in json format
+    """.stripMargin in {
+
+      val deletePostRequest = DeletePostRequestDTO(4L, "xxx")
+
+      Delete("/deletePost", HttpEntity(`application/json`, marshal(deletePostRequest).data.utf8String)) ~> routes ~> check {
+        status shouldBe BadRequest
+        contentType shouldBe `application/json`
+        responseAs[SecretKeyIsInvalidFailure] shouldBe SecretKeyIsInvalidFailure.apply()
+      }
+    }
+
+    """
+      |for an invalid DELETE request to the deletePost path
+      |   1. return to the client a list of errors in json format
+    """.stripMargin in {
+
+      val deletePostRequest = DeletePostRequestDTO(-4L, "secret_key_4")
+
+      Delete("/deletePost", HttpEntity(`application/json`, marshal(deletePostRequest).data.utf8String)) ~> routes ~> check {
+        status shouldBe BadRequest
+        contentType shouldBe `application/json`
+        responseAs[List[ValidationFailure]].map(_.validationError) shouldBe List(InvalidNegativeId.validationError)
       }
     }
   }
