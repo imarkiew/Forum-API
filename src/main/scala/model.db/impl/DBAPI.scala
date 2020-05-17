@@ -1,9 +1,9 @@
 package model.db.impl
 
 import config.slick.SlickConfig
-import dto.entities.{PostDto, TopicDto, UserDto}
+import dto.entities.{PostDTO, TopicDTO, UserDTO}
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{AddNewPostRequestDto, AddNewTopicRequestDto, UpdatePostRequestDto}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
 import failures.adhoc.{Failure, TopicIsNotPresentFailure, TopicOrPostIsNotPresentFailure}
 import model.db.dbio.DBIORepo
 import slick.dbio.DBIO
@@ -15,15 +15,15 @@ trait DBAPI extends DBIORepo { self: SlickConfig =>
   override implicit val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   implicit protected def run[T](query: DBIO[T]): Future[T] = db.run(query)
 
-  def findUser(externalUser: UserDto): Future[Option[UserDto]] = findUserDBIO(externalUser)
-  def findUser(id: Long): Future[Option[UserDto]] = findUserDBIO(id)
-  def findPost(id: Long): Future[Option[PostDto]] = findPostDBIO(id)
-  def addPost(newPostRequest: AddNewPostRequestDto): Future[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = addPostDBIO(newPostRequest)
-  def updatePost(updatePostRequestDto: UpdatePostRequestDto): Future[Either[Int, Failure]] = updatePostDBIO(updatePostRequestDto)
-  def postPagination(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): Future[Either[Seq[PostDto], TopicOrPostIsNotPresentFailure.type]] =
+  def findUser(externalUser: UserDTO): Future[Option[UserDTO]] = findUserDBIO(externalUser)
+  def findUser(id: Long): Future[Option[UserDTO]] = findUserDBIO(id)
+  def findPost(id: Long): Future[Option[PostDTO]] = findPostDBIO(id)
+  def addPost(newPostRequest: AddNewPostRequestDTO): Future[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = addPostDBIO(newPostRequest)
+  def updatePost(updatePostRequestDto: UpdatePostRequestDTO): Future[Either[Int, Failure]] = updatePostDBIO(updatePostRequestDto)
+  def postPagination(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): Future[Either[Seq[PostDTO], TopicOrPostIsNotPresentFailure.type]] =
     postsPaginationDBIO(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)
 
-  def findTopic(id: Long): Future[Option[TopicDto]] = findTopicDBIO(id)
-  def addTopic(newTopicRequest: AddNewTopicRequestDto): Future[AddNewTopicRequestIds] = addTopicDBIO(newTopicRequest)
-  def topNTopics(offset: Long, limit: Long): Future[Seq[TopicDto]] = topNTopicsDBIO(offset, limit)
+  def findTopic(id: Long): Future[Option[TopicDTO]] = findTopicDBIO(id)
+  def addTopic(newTopicRequest: AddNewTopicRequestDTO): Future[AddNewTopicRequestIds] = addTopicDBIO(newTopicRequest)
+  def topNTopics(offset: Long, limit: Long): Future[Seq[TopicDTO]] = topNTopicsDBIO(offset, limit)
 }

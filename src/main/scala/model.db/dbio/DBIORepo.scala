@@ -1,9 +1,9 @@
 package model.db.dbio
 
 import config.slick.SlickConfig
-import dto.entities.{PostDto, TopicDto, UserDto}
+import dto.entities.{PostDTO, TopicDTO, UserDTO}
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{AddNewPostRequestDto, AddNewTopicRequestDto, UpdatePostRequestDto}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
 import model.db.entities._
 import utils.Utils.{generateSecretKey, stringToTimestamp}
 import scala.concurrent.ExecutionContext
@@ -16,13 +16,13 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
   import driver.api._
   implicit val executionContext: ExecutionContext
 
-  protected def findUserDBIO(externalUser: UserDto): DBIO[Option[UserDto]] =
+  protected def findUserDBIO(externalUser: UserDTO): DBIO[Option[UserDTO]] =
     users.filter(user => user.nickname === externalUser.nickname && user.email === externalUser.email).result.headOption
 
-  protected def findUserDBIO(id: Long): DBIO[Option[UserDto]] = users.filter(_.userId === id).result.headOption
+  protected def findUserDBIO(id: Long): DBIO[Option[UserDTO]] = users.filter(_.userId === id).result.headOption
 
-  protected def addUserDBIO(newUser: UserDto): DBIO[Long] = (for {
-    isUserPresentInDatabase: Option[UserDto] <- findUserDBIO(newUser)
+  protected def addUserDBIO(newUser: UserDTO): DBIO[Long] = (for {
+    isUserPresentInDatabase: Option[UserDTO] <- findUserDBIO(newUser)
     userId: Long <- {
       isUserPresentInDatabase match {
         case Some(user) => DBIO.successful(user.userId.get)
@@ -31,23 +31,23 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     }
   } yield userId).transactionally
 
-  protected def findPostDBIO(id: Long): DBIO[Option[PostDto]] = posts.filter(_.postId === id).result.headOption
-  protected def addPostDBIO(newPost: PostDto): DBIO[Long] =
+  protected def findPostDBIO(id: Long): DBIO[Option[PostDTO]] = posts.filter(_.postId === id).result.headOption
+  protected def addPostDBIO(newPost: PostDTO): DBIO[Long] =
     posts.map(post => (post.content, post.secretKey, post.postTimestamp, post.userId, post.topicId)) returning posts.map(_.postId) +=
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
-  protected def addPostDBIO(newPostRequest: AddNewPostRequestDto): DBIO[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = topics.filter(_.topicId === newPostRequest.topicId).result.headOption.flatMap {
+  protected def addPostDBIO(newPostRequest: AddNewPostRequestDTO): DBIO[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = topics.filter(_.topicId === newPostRequest.topicId).result.headOption.flatMap {
     case Some(topic) => for {
-      userId <- addUserDBIO(UserDto(newPostRequest.nickname, newPostRequest.email))
+      userId <- addUserDBIO(UserDTO(newPostRequest.nickname, newPostRequest.email))
       postId <- {
-        val newPost = PostDto(newPostRequest.content, generateSecretKey, stringToTimestamp(newPostRequest.timestamp).get, userId, topic.topicId.get)
+        val newPost = PostDTO(newPostRequest.content, generateSecretKey, stringToTimestamp(newPostRequest.timestamp).get, userId, topic.topicId.get)
         addPostDBIO(newPost)
       }
     } yield Left(AddNewPostRequestIds(userId, postId))
     case _ => DBIO.successful(Right(TopicIsNotPresentFailure))
   }.transactionally
 
-  protected def updatePostDBIO(updatePostRequest: UpdatePostRequestDto): DBIO[Either[Int, Failure]] = {
+  protected def updatePostDBIO(updatePostRequest: UpdatePostRequestDTO): DBIO[Either[Int, Failure]] = {
     posts.filter(_.postId === updatePostRequest.postId).result.headOption.flatMap {
       case None => DBIO.successful(PostIsNotPresentFailure)
       case Some(post) => DBIO.successful(post.secretKey == updatePostRequest.secretKey)
@@ -61,7 +61,7 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     }.transactionally
   }
 
-  protected def postsPaginationDBIO(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Either[Seq[PostDto], TopicOrPostIsNotPresentFailure.type]] = {
+  protected def postsPaginationDBIO(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Either[Seq[PostDTO], TopicOrPostIsNotPresentFailure.type]] = {
     val maxNrOfRequiredPosts = nrOfPostsBefore + nrOfPostsAfter + 1
     val maxNrOfReturnedPosts = Config.appConfig.maxNrOfReturnedPosts
 
@@ -83,19 +83,19 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     }.transactionally
   }
 
-  protected def addTopicDBIO(newTopic: TopicDto): DBIO[Long] = topics.map(topic => (topic.subject, topic.lastPostTimestamp)) returning topics.map(_.topicId) +=
+  protected def addTopicDBIO(newTopic: TopicDTO): DBIO[Long] = topics.map(topic => (topic.subject, topic.lastPostTimestamp)) returning topics.map(_.topicId) +=
     (newTopic.subject, newTopic.lastPostTimestamp)
 
-  protected def findTopicDBIO(id: Long): DBIO[Option[TopicDto]] = topics.filter(_.topicId === id).result.headOption
+  protected def findTopicDBIO(id: Long): DBIO[Option[TopicDTO]] = topics.filter(_.topicId === id).result.headOption
 
-  protected def addTopicDBIO(newTopicRequest: AddNewTopicRequestDto): DBIO[AddNewTopicRequestIds] = {
-    val externalUser = UserDto(newTopicRequest.nickname, newTopicRequest.email)
-    val newTopic = TopicDto(newTopicRequest.subject, stringToTimestamp(newTopicRequest.timestamp).get)
+  protected def addTopicDBIO(newTopicRequest: AddNewTopicRequestDTO): DBIO[AddNewTopicRequestIds] = {
+    val externalUser = UserDTO(newTopicRequest.nickname, newTopicRequest.email)
+    val newTopic = TopicDTO(newTopicRequest.subject, stringToTimestamp(newTopicRequest.timestamp).get)
     val userDbio = findUserDBIO(externalUser)
     val topicIdDbio = addTopicDBIO(newTopic)
 
     (for {
-      userOption: Option[UserDto] <- userDbio
+      userOption: Option[UserDTO] <- userDbio
       userId <- {
         if(userOption.isEmpty){
           addUserDBIO(externalUser)
@@ -105,11 +105,11 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
       }
       topicId <- topicIdDbio
       postId <- {
-        val newPost = PostDto(newTopicRequest.content, generateSecretKey, stringToTimestamp(newTopicRequest.timestamp).get, userId, topicId)
+        val newPost = PostDTO(newTopicRequest.content, generateSecretKey, stringToTimestamp(newTopicRequest.timestamp).get, userId, topicId)
         addPostDBIO(newPost)
       }
     } yield AddNewTopicRequestIds(userId, topicId, postId)).transactionally
   }
 
-  protected def topNTopicsDBIO(offset: Long, limit: Long): DBIO[Seq[TopicDto]] = topics.sortBy(_.lastPostTimestamp.desc).drop(offset).take(limit).result
+  protected def topNTopicsDBIO(offset: Long, limit: Long): DBIO[Seq[TopicDTO]] = topics.sortBy(_.lastPostTimestamp.desc).drop(offset).take(limit).result
 }

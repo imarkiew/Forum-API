@@ -3,7 +3,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
-import dto.requests.{AddNewPostRequestDto, AddNewTopicRequestDto, UpdatePostRequestDto}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
 import json.converter.JsonConverter
 import model.db.impl.DBAPI
 import failures.adhoc._
@@ -18,7 +18,7 @@ trait HttpService extends JsonConverter {
   val dbApi: DBAPI
 
   val routes = path("addNewTopic") {
-    (post & entity(as[AddNewTopicRequestDto])) { newTopicRequest =>
+    (post & entity(as[AddNewTopicRequestDTO])) { newTopicRequest =>
       newTopicRequest.validate match {
         case Valid(validNewTopicRequest) => onComplete(dbApi.addTopic(validNewTopicRequest)) {
           case Success(ids) => complete(ids)
@@ -29,7 +29,7 @@ trait HttpService extends JsonConverter {
     }
   } ~
   path("addNewPost") {
-    (post & entity(as[AddNewPostRequestDto])) { newPostRequest =>
+    (post & entity(as[AddNewPostRequestDTO])) { newPostRequest =>
       newPostRequest.validate match {
         case Valid(validNewPostRequest) => onComplete(dbApi.addPost(validNewPostRequest)) {
           case Success(eitherIds) => eitherIds match {
@@ -44,7 +44,7 @@ trait HttpService extends JsonConverter {
     }
   } ~
   path("updatePost") {
-    (patch & entity(as[UpdatePostRequestDto])) { updatePostRequest =>
+    (patch & entity(as[UpdatePostRequestDTO])) { updatePostRequest =>
       updatePostRequest.validate match {
         case Valid(validUpdatePostRequest) => onComplete(dbApi.updatePost(validUpdatePostRequest)) {
           case Success(eitherNrOfAffectedRecords) => eitherNrOfAffectedRecords match {

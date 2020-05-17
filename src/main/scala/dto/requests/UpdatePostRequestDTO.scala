@@ -5,14 +5,14 @@ import validation.Validatable
 import validation.ValidationTypes.ValidationResult
 
 
-case class UpdatePostRequestDto(content: String, postId: Long, secretKey: String, timestamp: String) extends Validatable[UpdatePostRequestDto] {
+case class UpdatePostRequestDTO(content: String, postId: Long, secretKey: String, timestamp: String) extends Validatable[UpdatePostRequestDTO] {
 
-  override def validate: ValidationResult[UpdatePostRequestDto] = (
+  override def validate: ValidationResult[UpdatePostRequestDTO] = (
     validateContent,
     validatePostId,
     validateSecretKey,
     validateTimestamp
-  ).mapN(UpdatePostRequestDto.apply)
+  ).mapN(UpdatePostRequestDTO.apply)
 
   private def validateContent: ValidationResult[String] = utils.Utils.validateContent(content)
   private def validatePostId: ValidationResult[Long] = utils.Utils.validateId(postId)

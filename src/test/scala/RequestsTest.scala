@@ -4,7 +4,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.model.StatusCodes._
 import dto.entities._
 import dto.heplers.{AddNewPostRequestIds, AddNewTopicRequestIds}
-import dto.requests.{AddNewPostRequestDto, AddNewTopicRequestDto, UpdatePostRequestDto}
+import dto.requests.{AddNewPostRequestDTO, AddNewTopicRequestDTO, UpdatePostRequestDTO}
 import h2.H2DB
 import json.converter.JsonConverter
 import model.db.impl.H2DBImpl
@@ -33,10 +33,10 @@ class RequestsTest extends AnyWordSpec
   "The Forum-API" should {
 
     val topNTopicsRequestString = (offset: String, limit: String) => s"/topNTopics?&offset=$offset&limit=$limit"
-    val topic1 = TopicDto("subject_1", stringToTimestamp("2020-05-14T16:23:45.456Z").get, Some(1))
-    val topic2 = TopicDto("subject_3", stringToTimestamp("2019-11-03T10:10:34.122Z").get, Some(3))
-    val topic3 = TopicDto("subject_2", stringToTimestamp("2019-03-27T08:15:52.194Z").get, Some(2))
-    val topic4 = TopicDto("subject_4", stringToTimestamp("2018-08-09T22:04:07.677Z").get, Some(4))
+    val topic1 = TopicDTO("subject_1", stringToTimestamp("2020-05-14T16:23:45.456Z").get, Some(1))
+    val topic2 = TopicDTO("subject_3", stringToTimestamp("2019-11-03T10:10:34.122Z").get, Some(3))
+    val topic3 = TopicDTO("subject_2", stringToTimestamp("2019-03-27T08:15:52.194Z").get, Some(2))
+    val topic4 = TopicDTO("subject_4", stringToTimestamp("2018-08-09T22:04:07.677Z").get, Some(4))
 
     """
       |for a valid GET request to the topNTopics path
@@ -46,19 +46,19 @@ class RequestsTest extends AnyWordSpec
       Get(topNTopicsRequestString("0", "3")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[Seq[TopicDto]] shouldBe Seq(topic1, topic2, topic3)
+        responseAs[Seq[TopicDTO]] shouldBe Seq(topic1, topic2, topic3)
       }
 
       Get(topNTopicsRequestString("1", "2")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[Seq[TopicDto]] shouldBe Seq(topic2, topic3)
+        responseAs[Seq[TopicDTO]] shouldBe Seq(topic2, topic3)
       }
 
       Get(topNTopicsRequestString("1", "10")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[Seq[TopicDto]] shouldBe Seq(topic2, topic3, topic4)
+        responseAs[Seq[TopicDTO]] shouldBe Seq(topic2, topic3, topic4)
       }
     }
 
@@ -78,13 +78,13 @@ class RequestsTest extends AnyWordSpec
   "The Forum-API" should {
 
     val paginationRequestString = (topicId: String, postId: String, nrOfPostsBefore: String, nrOfPostsAfter: String) => s"/pagination?topicId=$topicId&postId=$postId&nrOfPostsBefore=$nrOfPostsBefore&nrOfPostsAfter=$nrOfPostsAfter"
-    val post1 = PostDto("content_7", "secret_key_7", stringToTimestamp("2020-05-14T16:23:45.456Z").get, 1, 1, Some(7))
-    val post2 = PostDto("content_4", "secret_key_4", stringToTimestamp("2020-05-09T22:00:00.103Z").get, 1, 1, Some(4))
-    val post3 = PostDto("content_1", "secret_key_1", stringToTimestamp("2020-04-22T19:10:25.474Z").get, 1, 1, Some(1))
-    val post4 = PostDto("content_6", "secret_key_6", stringToTimestamp("2020-03-27T08:15:52.004Z").get, 2, 1, Some(6))
-    val post5 = PostDto("content_2", "secret_key_2", stringToTimestamp("2020-03-22T11:03:33.532Z").get, 2, 1, Some(2))
-    val post6 = PostDto("content_8", "secret_key_8", stringToTimestamp("2019-02-06T17:02:29.000Z").get, 2, 1, Some(8))
-    val post7 = PostDto("content_5", "secret_key_5", stringToTimestamp("2018-10-08T14:28:54.374Z").get, 2, 1, Some(5))
+    val post1 = PostDTO("content_7", "secret_key_7", stringToTimestamp("2020-05-14T16:23:45.456Z").get, 1, 1, Some(7))
+    val post2 = PostDTO("content_4", "secret_key_4", stringToTimestamp("2020-05-09T22:00:00.103Z").get, 1, 1, Some(4))
+    val post3 = PostDTO("content_1", "secret_key_1", stringToTimestamp("2020-04-22T19:10:25.474Z").get, 1, 1, Some(1))
+    val post4 = PostDTO("content_6", "secret_key_6", stringToTimestamp("2020-03-27T08:15:52.004Z").get, 2, 1, Some(6))
+    val post5 = PostDTO("content_2", "secret_key_2", stringToTimestamp("2020-03-22T11:03:33.532Z").get, 2, 1, Some(2))
+    val post6 = PostDTO("content_8", "secret_key_8", stringToTimestamp("2019-02-06T17:02:29.000Z").get, 2, 1, Some(8))
+    val post7 = PostDTO("content_5", "secret_key_5", stringToTimestamp("2018-10-08T14:28:54.374Z").get, 2, 1, Some(5))
 
     """
       |for a valid GET request to the pagination path
@@ -94,7 +94,7 @@ class RequestsTest extends AnyWordSpec
       Get(paginationRequestString("1", "1", "4", "2")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[Seq[PostDto]] shouldBe Seq(post1, post2, post3, post4, post5, post6, post7)
+        responseAs[Seq[PostDTO]] shouldBe Seq(post1, post2, post3, post4, post5, post6, post7)
       }
     }
 
@@ -106,7 +106,7 @@ class RequestsTest extends AnyWordSpec
       Get(paginationRequestString("1", "1", "4", "3")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[Seq[PostDto]] shouldBe Seq(post1, post2, post3, post4, post5, post6)
+        responseAs[Seq[PostDTO]] shouldBe Seq(post1, post2, post3, post4, post5, post6)
       }
     }
 
@@ -155,7 +155,7 @@ class RequestsTest extends AnyWordSpec
       val subject = "Random topic"
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = AddNewTopicRequestDto(nickname, email, subject, content, timestamp)
+      val newTopic = AddNewTopicRequestDTO(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
 
@@ -174,9 +174,9 @@ class RequestsTest extends AnyWordSpec
         } yield (optionUser, optionTopic, optionPost)
 
         ScalaFutures.whenReady(ids) {
-          case (Some(UserDto(userNickname, userEmail, userId)),
-          Some(TopicDto(topicSubject, topicLastPostDateTimestamp, topicId)),
-          Some(PostDto(postContent, _, postTimestamp, postUserId, postTopicId, _))) => {
+          case (Some(UserDTO(userNickname, userEmail, userId)),
+          Some(TopicDTO(topicSubject, topicLastPostDateTimestamp, topicId)),
+          Some(PostDTO(postContent, _, postTimestamp, postUserId, postTopicId, _))) => {
             val timestampAsTimestamp = stringToTimestamp(timestamp).get
             userNickname shouldBe nickname
             userEmail shouldBe email
@@ -205,7 +205,7 @@ class RequestsTest extends AnyWordSpec
       val subject = "Random topic"
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = AddNewTopicRequestDto(nickname, email, subject, content, timestamp)
+      val newTopic = AddNewTopicRequestDTO(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
 
@@ -224,9 +224,9 @@ class RequestsTest extends AnyWordSpec
         } yield (optionUser, optionTopic, optionPost)
 
         ScalaFutures.whenReady(ids) {
-          case (Some(UserDto(userNickname, userEmail, userId)),
-          Some(TopicDto(topicSubject, topicLastPostDateTimestamp, topicId)),
-          Some(PostDto(postContent, _, postTimestamp, postUserId, postTopicId, _))) => {
+          case (Some(UserDTO(userNickname, userEmail, userId)),
+          Some(TopicDTO(topicSubject, topicLastPostDateTimestamp, topicId)),
+          Some(PostDTO(postContent, _, postTimestamp, postUserId, postTopicId, _))) => {
             val timestampAsTimestamp = stringToTimestamp(timestamp).get
             userNickname shouldBe nickname
             userEmail shouldBe email
@@ -253,7 +253,7 @@ class RequestsTest extends AnyWordSpec
       val subject = ""
       val content = "Random content"
       val timestamp = "2019-03-11T08:23:41.754Z"
-      val newTopic = AddNewTopicRequestDto(nickname, email, subject, content, timestamp)
+      val newTopic = AddNewTopicRequestDTO(nickname, email, subject, content, timestamp)
 
       Post("/addNewTopic", HttpEntity(`application/json`, marshal(newTopic).data.utf8String)) ~> routes ~> check {
         status shouldBe BadRequest
@@ -271,7 +271,7 @@ class RequestsTest extends AnyWordSpec
       |   3. send back to client a userId and postId in json format
     """.stripMargin in {
 
-      val newPost = AddNewPostRequestDto("Pjoter007", "piotrw11u@wp.pl", "No za grosz szacunku \n Czego oni ich tam uczą", 2L, "2020-05-16T14:32:10.062Z")
+      val newPost = AddNewPostRequestDTO("Pjoter007", "piotrw11u@wp.pl", "No za grosz szacunku \n Czego oni ich tam uczą", 2L, "2020-05-16T14:32:10.062Z")
 
       Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
         status shouldBe OK
@@ -287,7 +287,7 @@ class RequestsTest extends AnyWordSpec
         |   3. send back to the client a userId and postId in json format
       """.stripMargin in {
 
-        val newPost = AddNewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 2L, "2020-05-16T14:32:10.062Z")
+        val newPost = AddNewPostRequestDTO("nick_1", "nick1@gmail.com", "New post content", 2L, "2020-05-16T14:32:10.062Z")
 
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe OK
@@ -301,7 +301,7 @@ class RequestsTest extends AnyWordSpec
         |   1. send back to the client the TopicIsNotPresentFailure in json format
       """.stripMargin in {
 
-        val newPost = AddNewPostRequestDto("nick_1", "nick1@gmail.com", "New post content", 10L, "2020-05-16T14:32:10.062Z")
+        val newPost = AddNewPostRequestDTO("nick_1", "nick1@gmail.com", "New post content", 10L, "2020-05-16T14:32:10.062Z")
 
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe NotFound
@@ -315,7 +315,7 @@ class RequestsTest extends AnyWordSpec
         |   1. send back the to client a list of validation errors in json format
       """.stripMargin in {
 
-        val newPost = AddNewPostRequestDto("nick_1", "nick1gmail.com", "", -1L, "2020-05-16T14:32:10:062Z")
+        val newPost = AddNewPostRequestDTO("nick_1", "nick1gmail.com", "", -1L, "2020-05-16T14:32:10:062Z")
 
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe BadRequest
@@ -332,7 +332,7 @@ class RequestsTest extends AnyWordSpec
       |   1. return the OK status
     """.stripMargin in {
 
-      val partialUpdate = UpdatePostRequestDto("updated_content", 3, "secret_key_3", "2020-01-01T01:07:00.007Z")
+      val partialUpdate = UpdatePostRequestDTO("updated_content", 3, "secret_key_3", "2020-01-01T01:07:00.007Z")
 
       Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check(status shouldBe OK)
     }
@@ -342,7 +342,7 @@ class RequestsTest extends AnyWordSpec
       |   1. return to the client the PostIsNotPresentFailure in json format
     """.stripMargin in {
 
-      val partialUpdate = UpdatePostRequestDto("updated_content", 15, "secret_key_3", "2020-01-01T01:07:00.007Z")
+      val partialUpdate = UpdatePostRequestDTO("updated_content", 15, "secret_key_3", "2020-01-01T01:07:00.007Z")
 
       Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check {
         status shouldBe NotFound
@@ -356,7 +356,7 @@ class RequestsTest extends AnyWordSpec
       |   1. return to the client the SecretKeyIsInvalidFailure in json format
     """.stripMargin in {
 
-      val partialUpdate = UpdatePostRequestDto("updated_content", 3, "xxx", "2020-01-01T01:07:00.007Z")
+      val partialUpdate = UpdatePostRequestDTO("updated_content", 3, "xxx", "2020-01-01T01:07:00.007Z")
 
       Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check {
         status shouldBe BadRequest
@@ -370,7 +370,7 @@ class RequestsTest extends AnyWordSpec
       |   1. return to the client a list of errors in json format in
     """.stripMargin in {
 
-      val partialUpdate = UpdatePostRequestDto("", 3, "secret_key_3", "01-01T01:07:00.007Z")
+      val partialUpdate = UpdatePostRequestDTO("", 3, "secret_key_3", "01-01T01:07:00.007Z")
 
       Patch("/updatePost", HttpEntity(`application/json`, marshal(partialUpdate).data.utf8String)) ~> routes ~> check {
         status shouldBe BadRequest

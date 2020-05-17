@@ -1,7 +1,7 @@
 package model.db.entities
 
 import config.slick.SlickConfig
-import dto.entities.UserDto
+import dto.entities.UserDTO
 
 
 trait UsersEntity { self: SlickConfig =>
@@ -10,11 +10,11 @@ trait UsersEntity { self: SlickConfig =>
 
   protected val users = TableQuery[UsersTable]
 
-  protected class UsersTable(tag: Tag) extends Table[UserDto](tag, "users") {
+  protected class UsersTable(tag: Tag) extends Table[UserDTO](tag, "users") {
     def userId = column[Long]("user_id", O.PrimaryKey, O.AutoInc)
     def nickname = column[String]("nickname")
     def email = column[String]("email")
 
-    def * = (nickname, email, userId.?) <> (UserDto.tupled, UserDto.unapply)
+    def * = (nickname, email, userId.?) <> (UserDTO.tupled, UserDTO.unapply)
   }
 }

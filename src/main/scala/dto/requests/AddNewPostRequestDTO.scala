@@ -5,15 +5,15 @@ import validation.Validatable
 import validation.ValidationTypes.ValidationResult
 
 
-case class AddNewPostRequestDto(nickname: String, email: String, content: String, topicId: Long, timestamp: String) extends Validatable[AddNewPostRequestDto] {
+case class AddNewPostRequestDTO(nickname: String, email: String, content: String, topicId: Long, timestamp: String) extends Validatable[AddNewPostRequestDTO] {
 
-  override def validate: ValidationResult[AddNewPostRequestDto] = (
+  override def validate: ValidationResult[AddNewPostRequestDTO] = (
     validateNickname,
     validateEmail,
     validateContent,
     validateTopicId,
     validateTimestamp
-  ).mapN(AddNewPostRequestDto.apply)
+  ).mapN(AddNewPostRequestDTO.apply)
 
   private def validateNickname: ValidationResult[String] = utils.Utils.validateNickname(nickname)
   private def validateEmail: ValidationResult[String] = utils.Utils.validateEmail(email)
