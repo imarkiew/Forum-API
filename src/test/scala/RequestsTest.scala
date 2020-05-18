@@ -54,11 +54,17 @@ class RequestsTest extends AnyWordSpec
         contentType shouldBe `application/json`
         responseAs[Seq[TopicDTO]] shouldBe Seq(topic2, topic3)
       }
+    }
 
-      Get(topNTopicsRequestString("1", "10")) ~> routes ~> check {
+    """
+      |for a valid GET request to the topNTopics path if the maxNrOfReturnedTopics is exceeded
+      |   1. return a sequence of the most recent topics which is sorted by last post timestamp and truncated to maxNrOfReturnedTopics in json format
+    """.stripMargin in {
+
+      Get(topNTopicsRequestString("0", "5")) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[Seq[TopicDTO]] shouldBe Seq(topic2, topic3, topic4)
+        responseAs[Seq[TopicDTO]] shouldBe Seq(topic1, topic2, topic3, topic4)
       }
     }
 
@@ -276,7 +282,7 @@ class RequestsTest extends AnyWordSpec
       Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
         status shouldBe OK
         contentType shouldBe `application/json`
-        responseAs[AddNewPostRequestIds] shouldBe AddNewPostRequestIds(3L, 11L)
+        responseAs[AddNewPostRequestIds] shouldBe AddNewPostRequestIds(3L, 12L)
       }
     }
 
@@ -292,7 +298,7 @@ class RequestsTest extends AnyWordSpec
         Post("/addNewPost", HttpEntity(`application/json`, marshal(newPost).data.utf8String)) ~> routes ~> check {
           status shouldBe OK
           contentType shouldBe `application/json`
-          responseAs[AddNewPostRequestIds] shouldBe AddNewPostRequestIds(1L, 11L)
+          responseAs[AddNewPostRequestIds] shouldBe AddNewPostRequestIds(1L, 12L)
         }
       }
 

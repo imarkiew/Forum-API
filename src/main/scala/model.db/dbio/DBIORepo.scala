@@ -122,5 +122,8 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     } yield AddNewTopicRequestIds(userId, topicId, postId)).transactionally
   }
 
-  protected def topNTopicsDBIO(offset: Long, limit: Long): DBIO[Seq[TopicDTO]] = topics.sortBy(_.lastPostTimestamp.desc).drop(offset).take(limit).result
+  protected def topNTopicsDBIO(offset: Long, limit: Long): DBIO[Seq[TopicDTO]] = {
+    val checkedLimit = if(limit <= Config.appConfig.maxNrOfReturnedTopics) limit else Config.appConfig.maxNrOfReturnedTopics
+    topics.sortBy(_.lastPostTimestamp.desc).drop(offset).take(checkedLimit).result
+  }
 }
