@@ -48,27 +48,27 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
   }.transactionally
 
   protected def updatePostDBIO(updatePostRequest: UpdatePostRequestDTO): DBIO[Either[Int, Failure]] = {
-    posts.filter(_.postId === updatePostRequest.postId).result.headOption.flatMap {
-      case None => DBIO.successful(PostIsNotPresentFailure)
-      case Some(post) => DBIO.successful(post.secretKey == updatePostRequest.secretKey)
+    posts.filter(_.postId === updatePostRequest.postId).result.headOption.map {
+      case None => PostIsNotPresentFailure
+      case Some(post) => post.secretKey == updatePostRequest.secretKey
     }.flatMap {
       case PostIsNotPresentFailure => DBIO.successful(Right(PostIsNotPresentFailure.apply()))
       case false => DBIO.successful(Right(SecretKeyIsInvalidFailure.apply()))
       case true => posts
         .filter(_.postId === updatePostRequest.postId)
         .map(x => (x.content, x.postTimestamp))
-        .update((updatePostRequest.content, stringToTimestamp(updatePostRequest.timestamp).get)).flatMap(x => DBIO.successful(Left(x)))
+        .update((updatePostRequest.content, stringToTimestamp(updatePostRequest.timestamp).get)).map(Left(_))
     }.transactionally
   }
 
   protected def deletePostDBIO(deletePostRequestDto: DeletePostRequestDTO): DBIO[Either[Int, Failure]] = {
-    posts.filter(_.postId === deletePostRequestDto.postId).result.headOption.flatMap {
-      case None => DBIO.successful(PostIsNotPresentFailure)
-      case Some(post) => DBIO.successful(post.secretKey == deletePostRequestDto.secretKey)
+    posts.filter(_.postId === deletePostRequestDto.postId).result.headOption.map {
+      case None => PostIsNotPresentFailure
+      case Some(post) => post.secretKey == deletePostRequestDto.secretKey
     }.flatMap {
       case PostIsNotPresentFailure => DBIO.successful(Right(PostIsNotPresentFailure.apply()))
       case false => DBIO.successful(Right(SecretKeyIsInvalidFailure.apply()))
-      case true => posts.filter(_.postId === deletePostRequestDto.postId).delete.flatMap(x => DBIO.successful(Left(x)))
+      case true => posts.filter(_.postId === deletePostRequestDto.postId).delete.map(Left(_))
     }.transactionally
   }
 
@@ -83,12 +83,12 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
       ((nrOfPostsBefore.toDouble / factor).floor.toLong, (nrOfPostsAfter.toDouble / factor).floor.toLong)
     }
 
-    posts.filter(x => x.topicId === topicId && x.postId === postId).result.headOption.flatMap{
-      case Some(_) => for {
-        middlePostTimestamp <- posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.headOption
-        requiredTopic = posts.filter(x => x.topicId === topicId)
-        posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfterChecked + 1).unionAll( // unionAll preserves the order
-          requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBeforeChecked)).result
+    posts.filter(x => x.topicId === topicId && x.postId === postId).map(_.postTimestamp).result.headOption.flatMap {
+      case Some(middlePostTimestamp) =>
+        val requiredTopic = posts.filter(_.topicId === topicId)
+        for {
+          posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfterChecked + 1).unionAll( // unionAll preserves the order
+            requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBeforeChecked)).result
       } yield Left(posts)
       case _ => DBIO.successful(Right(TopicOrPostIsNotPresentFailure))
     }.transactionally
