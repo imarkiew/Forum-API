@@ -18,10 +18,10 @@ trait DBAPI extends DBIORepo { self: SlickConfig =>
   def findUser(externalUser: UserDTO): Future[Option[UserDTO]] = findUserDBIO(externalUser)
   def findUser(id: Long): Future[Option[UserDTO]] = findUserDBIO(id)
   def findPost(id: Long): Future[Option[PostDTO]] = findPostDBIO(id)
-  def addPost(newPostRequest: AddNewPostRequestDTO): Future[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = addPostDBIO(newPostRequest)
-  def deletePost(deletePostRequestDto: DeletePostRequestDTO): Future[Either[Int, Failure]] = deletePostDBIO(deletePostRequestDto)
-  def updatePost(updatePostRequestDto: UpdatePostRequestDTO): Future[Either[Int, Failure]] = updatePostDBIO(updatePostRequestDto)
-  def postPagination(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): Future[Either[Seq[PostDTO], TopicOrPostIsNotPresentFailure.type]] =
+  def addPost(newPostRequest: AddNewPostRequestDTO): Future[Either[TopicIsNotPresentFailure.type, AddNewPostRequestIds]] = addPostDBIO(newPostRequest)
+  def deletePost(deletePostRequestDto: DeletePostRequestDTO): Future[Either[Failure, Int]] = deletePostDBIO(deletePostRequestDto)
+  def updatePost(updatePostRequestDto: UpdatePostRequestDTO): Future[Either[Failure, Int]] = updatePostDBIO(updatePostRequestDto)
+  def postPagination(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): Future[Either[TopicOrPostIsNotPresentFailure.type, Seq[PostDTO]]] =
     postsPaginationDBIO(topicId, postId, nrOfPostsBefore, nrOfPostsAfter)
 
   def findTopic(id: Long): Future[Option[TopicDTO]] = findTopicDBIO(id)

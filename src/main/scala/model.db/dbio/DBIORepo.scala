@@ -36,43 +36,43 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
     posts.map(post => (post.content, post.secretKey, post.postTimestamp, post.userId, post.topicId)) returning posts.map(_.postId) +=
       (newPost.content, newPost.secretKey, newPost.postTimestamp, newPost.userId, newPost.topicId)
 
-  protected def addPostDBIO(newPostRequest: AddNewPostRequestDTO): DBIO[Either[AddNewPostRequestIds, TopicIsNotPresentFailure.type]] = topics.filter(_.topicId === newPostRequest.topicId).result.headOption.flatMap {
+  protected def addPostDBIO(newPostRequest: AddNewPostRequestDTO): DBIO[Either[TopicIsNotPresentFailure.type, AddNewPostRequestIds]] = topics.filter(_.topicId === newPostRequest.topicId).result.headOption.flatMap {
     case Some(topic) => for {
       userId <- addUserDBIO(UserDTO(newPostRequest.nickname, newPostRequest.email))
       postId <- {
         val newPost = PostDTO(newPostRequest.content, generateSecretKey, stringToTimestamp(newPostRequest.timestamp).get, userId, topic.topicId.get)
         addPostDBIO(newPost)
       }
-    } yield Left(AddNewPostRequestIds(userId, postId))
-    case _ => DBIO.successful(Right(TopicIsNotPresentFailure))
+    } yield Right(AddNewPostRequestIds(userId, postId))
+    case _ => DBIO.successful(Left(TopicIsNotPresentFailure))
   }.transactionally
 
-  protected def updatePostDBIO(updatePostRequest: UpdatePostRequestDTO): DBIO[Either[Int, Failure]] = {
+  protected def updatePostDBIO(updatePostRequest: UpdatePostRequestDTO): DBIO[Either[Failure, Int]] = {
     posts.filter(_.postId === updatePostRequest.postId).result.headOption.map {
       case None => PostIsNotPresentFailure
       case Some(post) => post.secretKey == updatePostRequest.secretKey
     }.flatMap {
-      case PostIsNotPresentFailure => DBIO.successful(Right(PostIsNotPresentFailure.apply()))
-      case false => DBIO.successful(Right(SecretKeyIsInvalidFailure.apply()))
+      case PostIsNotPresentFailure => DBIO.successful(Left(PostIsNotPresentFailure.apply()))
+      case false => DBIO.successful(Left(SecretKeyIsInvalidFailure.apply()))
       case true => posts
         .filter(_.postId === updatePostRequest.postId)
         .map(x => (x.content, x.postTimestamp))
-        .update((updatePostRequest.content, stringToTimestamp(updatePostRequest.timestamp).get)).map(Left(_))
+        .update((updatePostRequest.content, stringToTimestamp(updatePostRequest.timestamp).get)).map(Right(_))
     }.transactionally
   }
 
-  protected def deletePostDBIO(deletePostRequestDto: DeletePostRequestDTO): DBIO[Either[Int, Failure]] = {
+  protected def deletePostDBIO(deletePostRequestDto: DeletePostRequestDTO): DBIO[Either[Failure, Int]] = {
     posts.filter(_.postId === deletePostRequestDto.postId).result.headOption.map {
       case None => PostIsNotPresentFailure
       case Some(post) => post.secretKey == deletePostRequestDto.secretKey
     }.flatMap {
-      case PostIsNotPresentFailure => DBIO.successful(Right(PostIsNotPresentFailure.apply()))
-      case false => DBIO.successful(Right(SecretKeyIsInvalidFailure.apply()))
-      case true => posts.filter(_.postId === deletePostRequestDto.postId).delete.map(Left(_))
+      case PostIsNotPresentFailure => DBIO.successful(Left(PostIsNotPresentFailure.apply()))
+      case false => DBIO.successful(Left(SecretKeyIsInvalidFailure.apply()))
+      case true => posts.filter(_.postId === deletePostRequestDto.postId).delete.map(Right(_))
     }.transactionally
   }
 
-  protected def postsPaginationDBIO(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Either[Seq[PostDTO], TopicOrPostIsNotPresentFailure.type]] = {
+  protected def postsPaginationDBIO(topicId: Long, postId: Long, nrOfPostsBefore: Long, nrOfPostsAfter: Long): DBIO[Either[TopicOrPostIsNotPresentFailure.type, Seq[PostDTO]]] = {
     val maxNrOfRequiredPosts = nrOfPostsBefore + nrOfPostsAfter + 1
     val maxNrOfReturnedPosts = Config.appConfig.maxNrOfReturnedPosts
 
@@ -89,8 +89,8 @@ trait DBIORepo extends PostsEntity { self: SlickConfig =>
         for {
           posts <- requiredTopic.filter(_.postTimestamp >= middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsAfterChecked + 1).unionAll( // unionAll preserves the order
             requiredTopic.filter(_.postTimestamp < middlePostTimestamp).sortBy(_.postTimestamp.desc).take(nrOfPostsBeforeChecked)).result
-      } yield Left(posts)
-      case _ => DBIO.successful(Right(TopicOrPostIsNotPresentFailure))
+      } yield Right(posts)
+      case _ => DBIO.successful(Left(TopicOrPostIsNotPresentFailure))
     }.transactionally
   }
 
